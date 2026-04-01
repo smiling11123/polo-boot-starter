@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.polo.boot.api.doc.config.OpenApiGroupsEnvironmentPostProcessor

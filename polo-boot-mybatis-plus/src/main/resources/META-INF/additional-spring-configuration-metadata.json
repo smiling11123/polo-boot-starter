@@ -1,0 +1,109 @@
+{
+  "properties": [
+    {
+      "name": "polo.mybatis-plus.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 MyBatis-Plus 增强模块自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.mybatis-plus.meta-object-handler-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用审计与自动填充处理器。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.mybatis-plus.pagination-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用分页拦截器。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.mybatis-plus.optimistic-locker-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用乐观锁拦截器。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.mybatis-plus.tenant.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用租户隔离。",
+      "defaultValue": false
+    },
+    {
+      "name": "polo.mybatis-plus.tenant.tenant-id-column",
+      "type": "java.lang.String",
+      "description": "数据库表中的租户字段名。"
+    },
+    {
+      "name": "polo.mybatis-plus.tenant.ignore-if-missing",
+      "type": "java.lang.Boolean",
+      "description": "上下文中缺少 tenantId 时是否忽略租户过滤。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.mybatis-plus.tenant.ignore-tables",
+      "type": "java.lang.String[]",
+      "description": "不参与租户隔离的表名列表。"
+    },
+    {
+      "name": "polo.mybatis-plus.data-scope.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用数据权限 SQL 拦截。",
+      "defaultValue": false
+    },
+    {
+      "name": "polo.mybatis-plus.data-scope.admin-bypass",
+      "type": "java.lang.Boolean",
+      "description": "管理员是否直接绕过数据权限限制。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.mybatis-plus.data-scope.deny-when-attribute-missing",
+      "type": "java.lang.Boolean",
+      "description": "缺少部门或审计人等关键上下文属性时，是否直接返回空结果。",
+      "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "polo.mybatis-plus.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用 MyBatis-Plus 相关增强自动装配。"
+        },
+        {
+          "value": false,
+          "description": "关闭分页、乐观锁、数据权限、租户与自动填充增强。"
+        }
+      ]
+    },
+    {
+      "name": "polo.mybatis-plus.tenant.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用多租户 SQL 自动隔离。"
+        },
+        {
+          "value": false,
+          "description": "不对 SQL 自动追加租户条件。"
+        }
+      ]
+    },
+    {
+      "name": "polo.mybatis-plus.data-scope.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用 Mapper 方法上的 @DataScope 数据权限拦截。"
+        },
+        {
+          "value": false,
+          "description": "关闭数据权限 SQL 改写。"
+        }
+      ]
+    }
+  ]
+}

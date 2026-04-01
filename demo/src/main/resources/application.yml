@@ -1,0 +1,163 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: polo-boot-demo
+  datasource:
+    url: jdbc:h2:mem:polo_demo;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  sql:
+    init:
+      mode: never
+  servlet:
+    multipart:
+      max-file-size: 50MB      # 单个文件最大 50MB
+      max-request-size: 100MB  # 整个请求最大 100MB
+polo:
+  web:
+    enabled: true
+    exception-handler-enabled: true
+    operation-log-enabled: true
+  cache:
+    enabled: true
+    redis-service-enabled: true
+  api-doc:
+    title: Polo Boot Demo API
+    description: Starter demo API documentation
+    version: v1.0.0
+    all-apis-display-name: 全部接口
+    persist-authorization: true
+    create-default-group: false
+    packages-to-scan:
+      - com.polo.demo.controller
+    security-excluded-paths:
+      - /auth/login
+      - /auth/refresh
+      - /validate/full
+      - /validate/phone
+      - /validate/email
+      - /validate/id-card
+      - /validate/bank-card
+      - /validate/car-no
+      - /validate/credit-code
+      - /validate/ip
+      - /validate/password
+      - /validate/content
+      - /exception/**
+    groups:
+      - name: auth
+        display-name: Authentication
+        path:
+          - /auth/**
+      - name: user
+        display-name: User APIs
+        path:
+          - /user/**
+      - name: file
+        display-name: File APIs
+        path:
+          - /files/**
+      - name: validate
+        display-name: Validation APIs
+        path:
+          - /validate/**
+      - name: cache
+        display-name: Cache APIs
+        path:
+          - /cache/**
+      - name: rate-limit
+        display-name: Rate Limit APIs
+        path:
+          - /rate-limit/**
+      - name: mybatis-demo
+        display-name: MyBatis Demo APIs
+        path:
+          - /mybatis-demo/**
+      - name: context-trans
+        display-name: Context Transfer APIs
+        path:
+          - /context-trans/**
+      - name: exception
+        display-name: Exception APIs
+        path:
+          - /exception/**
+  context-trans:
+    enabled: true
+    enable-async: true
+    register-default-executors: true
+    propagate-upload-context: true
+  security:
+    enabled: true
+    auth-enabled: true
+    current-user-resolver-enabled: true
+    duplicate-submit-enabled: true
+    jwt:
+      session-enabled: true
+      secret: 12345678901234567890123456789012
+      access-token-expire: 30
+      refresh-token-expire: 10080
+      refresh-rotation: true
+      max-devices: 3
+      allow-concurrent-login: true
+      allow-token-pair: true
+  storage:
+    enabled: true
+    oss:
+      oss-enabled: false
+    cos:
+      cos-enabled: false
+    minio:
+      minio-enabled: true
+      endpoint: http://127.0.0.1:9000
+      access-key: minioadmin
+      secret-key: minioadmin
+      bucket: demo
+      public-url: http://127.0.0.1:9000
+    upload:
+      path-prefix: uploads
+      max-size: 10485760
+      allowed-extensions:
+        - jpg
+        - jpeg
+        - png
+        - pdf
+      filename-strategy: UUID
+      private-access: false
+      generate-thumbnail: true
+    delete:
+      delete-thumbnail-on-delete: true
+  validation:
+    enabled: true
+    input-content:
+      enabled: true
+      default-ai-threshold: 0.8
+      word-library:
+        built-in-enabled: true
+        built-in-path: sensitive-words/
+        dynamic-enabled: true
+        database-enabled: false
+      ai:
+        enabled: false
+  mybatis-plus:
+    enabled: true
+    meta-object-handler-enabled: true
+    pagination-enabled: true
+    optimistic-locker-enabled: true
+    tenant:
+      enabled: true
+      tenant-id-column: tenant_id
+    data-scope:
+      enabled: true
+      admin-bypass: true
+      deny-when-attribute-missing: true

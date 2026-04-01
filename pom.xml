@@ -1,0 +1,99 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.polo</groupId>
+    <artifactId>polo-boot-starter</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>polo-boot-starter</name>
+    <description>A reusable Spring Boot starter scaffold for backend projects.</description>
+
+    <modules>
+        <module>polo-boot-core</module>
+        <module>polo-boot-web</module>
+        <module>polo-boot-security</module>
+        <module>polo-boot-cache</module>
+        <module>polo-boot-storage</module>
+        <module>demo</module>
+        <module>polo-boot-validation</module>
+        <module>polo-boot-mybatis-plus</module>
+        <module>polo-boot-api-doc</module>
+        <module>polo-boot-context-trans</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.boot.version>3.3.5</spring.boot.version>
+        <jjwt.version>0.12.3</jjwt.version>
+        <minio.version>8.5.9</minio.version>
+        <cos.version>5.6.89</cos.version>
+        <lombok.version>1.18.34</lombok.version>
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-configuration-processor</artifactId>
+                <version>${spring.boot.version}</version>
+                <optional>true</optional>  <!-- 重要：不传递依赖 -->
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <parameters>true</parameters>
+                        <release>${maven.compiler.release}</release>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.springframework.boot</groupId>
+                                <artifactId>spring-boot-configuration-processor</artifactId>
+                                <version>${spring.boot.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring.boot.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

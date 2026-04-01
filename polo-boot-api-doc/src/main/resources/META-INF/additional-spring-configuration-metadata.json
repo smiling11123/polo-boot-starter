@@ -1,0 +1,144 @@
+{
+  "properties": [
+    {
+      "name": "polo.api-doc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 OpenAPI / Swagger 自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.api-doc.title",
+      "type": "java.lang.String",
+      "description": "接口文档标题。"
+    },
+    {
+      "name": "polo.api-doc.description",
+      "type": "java.lang.String",
+      "description": "接口文档描述。"
+    },
+    {
+      "name": "polo.api-doc.version",
+      "type": "java.lang.String",
+      "description": "接口文档版本号。"
+    },
+    {
+      "name": "polo.api-doc.show-all-apis-group",
+      "type": "java.lang.Boolean",
+      "description": "是否在 Swagger UI 中显示“全部接口”分组。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.api-doc.all-apis-display-name",
+      "type": "java.lang.String",
+      "description": "Swagger UI 中“全部接口”分组的显示名称。"
+    },
+    {
+      "name": "polo.api-doc.persist-authorization",
+      "type": "java.lang.Boolean",
+      "description": "是否在 Swagger UI 中持久化 Bearer Token，切换分组或刷新页面后继续保留授权状态。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.api-doc.create-default-group",
+      "type": "java.lang.Boolean",
+      "description": "是否自动创建一个默认分组。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.api-doc.packages-to-scan",
+      "type": "java.lang.String[]",
+      "description": "默认扫描的 Controller 包路径列表。"
+    },
+    {
+      "name": "polo.api-doc.paths-to-match",
+      "type": "java.lang.String[]",
+      "description": "默认分组匹配的路径模式列表。"
+    },
+    {
+      "name": "polo.api-doc.paths-to-exclude",
+      "type": "java.lang.String[]",
+      "description": "默认分组需要排除的路径模式列表。"
+    },
+    {
+      "name": "polo.api-doc.enable-security",
+      "type": "java.lang.Boolean",
+      "description": "是否在文档中启用 Bearer 鉴权方案。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.api-doc.security-scheme-name",
+      "type": "java.lang.String",
+      "description": "Swagger 中安全方案的内部名称。"
+    },
+    {
+      "name": "polo.api-doc.security-scheme-description",
+      "type": "java.lang.String",
+      "description": "Swagger 鉴权输入框说明。"
+    },
+    {
+      "name": "polo.api-doc.security-excluded-paths",
+      "type": "java.lang.String[]",
+      "description": "文档中不显示鉴权要求的接口路径列表。"
+    },
+    {
+      "name": "polo.api-doc.enable-default-responses",
+      "type": "java.lang.Boolean",
+      "description": "是否自动补充默认错误响应说明。",
+      "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "polo.api-doc.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用 Swagger UI 和 OpenAPI 文档自动装配。"
+        },
+        {
+          "value": false,
+          "description": "关闭文档自动装配。"
+        }
+      ]
+    },
+    {
+      "name": "polo.api-doc.show-all-apis-group",
+      "values": [
+        {
+          "value": true,
+          "description": "在 Swagger UI 下拉中显示一份全量接口文档。"
+        },
+        {
+          "value": false,
+          "description": "只展示自定义分组。"
+        }
+      ]
+    },
+    {
+      "name": "polo.api-doc.create-default-group",
+      "values": [
+        {
+          "value": true,
+          "description": "自动生成一个默认分组。"
+        },
+        {
+          "value": false,
+          "description": "只使用显式配置的 groups/public/admin 分组。"
+        }
+      ]
+    },
+    {
+      "name": "polo.api-doc.persist-authorization",
+      "values": [
+        {
+          "value": true,
+          "description": "切换 Swagger 分组或刷新页面后继续保留已输入的 Bearer Token。"
+        },
+        {
+          "value": false,
+          "description": "每次刷新页面或切换分组后都重新输入 Bearer Token。"
+        }
+      ]
+    }
+  ]
+}

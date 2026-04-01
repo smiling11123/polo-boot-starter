@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "polo.cache.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用缓存模块自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.cache.redis-service-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否注册 RedisService 及其默认依赖 Bean。",
+      "defaultValue": true
+    }
+  ]
+}

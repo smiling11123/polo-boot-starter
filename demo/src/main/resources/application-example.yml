@@ -1,0 +1,283 @@
+# polo-boot-starter 示例配置
+# 这份文件用于展示项目内主要自定义配置项及字段含义，不会被 Spring Boot 默认加载。
+
+server:
+  # Web 服务端口
+  port: 8080
+
+spring:
+  application:
+    # 当前应用名称
+    name: polo-boot-demo
+  datasource:
+    # demo 默认使用内存 H2 数据库，启动时会自动执行 schema.sql 和 data.sql
+    url: jdbc:h2:mem:polo_demo;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  data:
+    redis:
+      # Redis 主机地址。security、cache、validation 动态词库等能力都会用到
+      host: localhost
+      # Redis 端口
+      port: 6379
+      # Redis 密码，未设置可留空或删除
+      password:
+
+polo:
+  web:
+    # 是否启用 web 模块自动装配
+    enabled: true
+    # 是否启用全局异常处理器
+    exception-handler-enabled: true
+    # 是否启用操作日志切面
+    operation-log-enabled: true
+
+  cache:
+    # 是否启用 cache 模块自动装配
+    enabled: true
+    # 是否注册 RedisService 默认实现
+    redis-service-enabled: true
+
+  api-doc:
+    # 是否启用 OpenAPI / Swagger 自动装配
+    enabled: true
+    # 文档标题
+    title: Polo Boot Demo API
+    # 文档描述
+    description: Starter demo API documentation
+    # 文档版本号
+    version: v1.0.0
+    # Swagger UI 中“全部接口”分组的显示名称
+    all-apis-display-name: 全部接口
+    # 是否在 Swagger UI 中持久化 Bearer Token，切换分组或刷新页面后继续保留
+    persist-authorization: true
+    # 是否额外创建默认分组。开启后通常会生成一组自定义 default 文档
+    create-default-group: false
+    # 参与扫描的 controller 包路径
+    packages-to-scan:
+      - com.polo.demo.controller
+    # 不需要强制显示 Bearer 鉴权要求的公开接口路径
+    security-excluded-paths:
+      - /auth/login
+      - /auth/refresh
+      - /validate/full
+      - /validate/phone
+      - /validate/email
+      - /validate/id-card
+      - /validate/bank-card
+      - /validate/car-no
+      - /validate/credit-code
+      - /validate/ip
+      - /validate/password
+      - /validate/content
+    # 自定义接口分组
+    groups:
+      - name: auth
+        # Swagger UI 中展示的分组名称
+        display-name: Authentication
+        # 该分组命中的请求路径
+        path:
+          - /auth/**
+      - name: user
+        display-name: User APIs
+        path:
+          - /user/**
+      - name: file
+        display-name: File APIs
+        path:
+          - /files/**
+      - name: context-trans
+        display-name: Context Transfer APIs
+        path:
+          - /context-trans/**
+
+  context-trans:
+    # 是否启用上下文透传模块
+    enabled: true
+    # 是否自动开启 @Async 支持
+    enable-async: true
+    # 是否自动注册 taskExecutor / ioExecutor
+    register-default-executors: true
+    # 是否透传 UploadContext，仅在 polo.storage.enabled=true 时生效
+    propagate-upload-context: true
+
+  security:
+    # 是否启用 security 模块自动装配
+    enabled: true
+    # 是否启用鉴权主链路，包括 token 拦截、JWT、会话等能力
+    auth-enabled: true
+    # 是否启用 @CurrentUser / @CurrentUserAttribute 参数解析器
+    current-user-resolver-enabled: true
+    # 是否启用防重复提交切面
+    duplicate-submit-enabled: true
+    jwt:
+      # 是否启用服务端会话模式。true 表示 access token + Redis session
+      session-enabled: true
+      # JWT 签名密钥，建议至少 32 字节
+      secret: 12345678901234567890123456789012
+      # Access Token 有效期，单位分钟
+      access-token-expire: 30
+      # Refresh Token 有效期，单位分钟
+      refresh-token-expire: 10080
+      # 是否开启 refresh token 轮换。开启后每次刷新都会签发新 refresh token
+      refresh-rotation: true
+      # 单个用户允许同时在线的最大设备数
+      max-devices: 3
+      # 是否允许并发登录。关闭后新登录可顶掉旧会话
+      allow-concurrent-login: true
+      # 是否启用 access token + refresh token 双 token 模式
+      allow-token-pair: true
+
+  storage:
+    # 是否启用 storage 模块自动装配
+    enabled: true
+    # 默认底层存储类型，可选 MINIO / OSS / LOCAL / CUSTOM
+    type: MINIO
+
+    # MinIO 默认实现开关。启用后会自动注册 MinIO FileStorage
+    minio-enabled: true
+    # MinIO 服务地址，例如 http://127.0.0.1:9000
+    endpoint: http://127.0.0.1:9000
+    # MinIO Access Key
+    access-key: minioadmin
+    # MinIO Secret Key
+    secret-key: minioadmin
+    # 默认文件桶名称
+    bucket: demo
+    # 对外访问地址前缀。未配置时通常回退为 endpoint
+    public-url: http://127.0.0.1:9000
+
+    upload:
+      # 默认存储路径前缀。@UploadFile 未指定 pathPrefix 时会回退到这里
+      path-prefix: uploads
+      # 默认单文件最大大小，单位字节
+      max-size: 10485760
+      # 默认 MIME 类型白名单。为空表示不限制
+      allowed-types:
+        - image/jpeg
+        - image/png
+        - application/pdf
+      # 默认文件扩展名白名单。为空表示不限制
+      allowed-extensions:
+        - jpg
+        - jpeg
+        - png
+        - pdf
+      # 默认文件名生成策略，可选 ORIGINAL / UUID / TIMESTAMP
+      filename-strategy: UUID
+      # 是否默认生成私有访问签名链接
+      private-access: false
+      # 默认签名链接过期秒数
+      signature-expire: 3600
+      # 是否默认生成缩略图
+      generate-thumbnail: false
+      # 默认缩略图宽度
+      thumbnail-width: 200
+      # 默认缩略图高度
+      thumbnail-height: 200
+    delete:
+      # 删除原文件时是否同时尝试删除缩略图。默认关闭，更保守
+      delete-thumbnail-on-delete: false
+      # 是否允许调用“删除第三方存储桶”能力。默认关闭，避免误删整个 bucket
+      allow-bucket-delete: false
+    chunk:
+      # 是否启用分片断点续传
+      enabled: true
+      # 分片临时目录
+      temp-dir: D:/data/upload-chunks
+      # 合并上传成功后是否自动删除本地分片
+      delete-after-complete: true
+      # 合并分片时的缓冲区大小，单位字节
+      merge-buffer-size: 1048576
+
+    oss:
+      # 是否启用 OSS 默认实现
+      oss-enabled: false
+      # OSS 服务地址
+      end-point:
+      # OSS 存储桶名称
+      bucket:
+      # OSS Access Key
+      access-key:
+      # OSS Secret Key
+      secret-key:
+      # OSS 文件对外访问地址前缀
+      public-url:
+
+    cos:
+      # 是否启用腾讯云 COS 默认实现
+      cos-enabled: false
+      # COS 所属地域，例如 ap-shanghai
+      region:
+      # COS 存储桶名称
+      bucket:
+      # 腾讯云 SecretId
+      secret-id:
+      # 腾讯云 SecretKey
+      secret-key:
+      # COS 文件对外访问地址前缀
+      public-url:
+
+    local:
+      # 是否启用本地文件存储实现
+      local-enabled: false
+      # 本地文件根目录
+      local-path: D:/data/uploads
+      # 本地签名 URL 使用的安全密钥
+      security-key:
+
+  validation:
+    # 是否启用 validation 模块自动装配
+    enabled: true
+    input-content:
+      # 是否启用内容安全相关 Bean
+      enabled: true
+      # 默认 AI 检测阈值，越大越严格
+      default-ai-threshold: 0.8
+      word-library:
+        # 是否启用内置词库
+        built-in-enabled: true
+        # 内置敏感词资源目录
+        built-in-path: sensitive-words/
+        # 是否启用 Redis 动态词库
+        dynamic-enabled: false
+        # Redis 中动态词库对应的 Hash Key
+        redis-key: content:security:words
+        # 动态词库刷新间隔，单位毫秒
+        refresh-interval: 600000
+        # 是否启用数据库词库 SPI。开启后可由业务项目实现 SensitiveWordProvider 从数据库加载词库
+        database-enabled: false
+      ai:
+        # 是否启用第三方 AI 内容检测
+        enabled: false
+        # 第三方 AI 检测接口地址
+        api-url:
+        # 第三方 AI 检测接口鉴权 Key
+        api-key:
+
+  mybatis-plus:
+    # 是否启用 mybatis-plus 增强模块自动装配
+    enabled: true
+    # 是否启用自动填充与审计处理器
+    meta-object-handler-enabled: true
+    # 是否启用分页拦截器
+    pagination-enabled: true
+    # 是否启用乐观锁拦截器
+    optimistic-locker-enabled: true
+    tenant:
+      # 是否启用租户隔离
+      enabled: true
+      # 租户字段列名
+      tenant-id-column: tenant_id
+      # 忽略租户隔离的表名列表
+      ignore-tables: []
+      # 当前上下文没有租户信息时是否忽略租户拦截
+      ignore-if-missing: true
+    data-scope:
+      # 是否启用数据权限 SQL 改写
+      enabled: true
+      # 命中管理员时是否直接放行
+      admin-bypass: true
+      # 缺少部门/审计用户等上下文属性时，是否直接拒绝查询
+      deny-when-attribute-missing: true

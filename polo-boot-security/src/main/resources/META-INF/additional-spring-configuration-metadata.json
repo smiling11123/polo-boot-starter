@@ -1,0 +1,200 @@
+{
+  "properties": [
+    {
+      "name": "polo.security.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全模块自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.security.auth-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 JWT、鉴权拦截器与登录态恢复主链路。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.security.current-user-resolver-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 @CurrentUser 与 @CurrentUserAttribute 参数解析器。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.security.duplicate-submit-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用基于 Redis 的防重复提交切面。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.security.rate-limit-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用基于 Redis 的接口限流能力。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.security.qr-code-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用二维码登录能力。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.security.jwt.session-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用服务端会话管理。false 表示纯 JWT 无状态模式，true 表示使用 Redis 保存登录会话。",
+      "defaultValue": false
+    },
+    {
+      "name": "polo.security.jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT 签名密钥，至少需要 32 个字节。"
+    },
+    {
+      "name": "polo.security.jwt.access-token-expire",
+      "type": "java.lang.Long",
+      "description": "Access Token 有效期，单位为分钟。"
+    },
+    {
+      "name": "polo.security.jwt.refresh-token-expire",
+      "type": "java.lang.Long",
+      "description": "Refresh Token 有效期，单位为分钟，仅在双 token 模式下生效。"
+    },
+    {
+      "name": "polo.security.jwt.refresh-rotation",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Refresh Token 轮换。开启后每次刷新会签发新的 Refresh Token。"
+    },
+    {
+      "name": "polo.security.jwt.max-devices",
+      "type": "java.lang.Integer",
+      "description": "单个账号允许同时在线的最大设备数。小于等于 0 时表示不限制。"
+    },
+    {
+      "name": "polo.security.jwt.allow-concurrent-login",
+      "type": "java.lang.Boolean",
+      "description": "是否允许同一账号同时登录多个设备。"
+    },
+    {
+      "name": "polo.security.jwt.allow-token-pair",
+      "type": "java.lang.Boolean",
+      "description": "是否启用双 token 模式。开启后登录会返回 accessToken 和 refreshToken。"
+    }
+  ],
+  "hints": [
+    {
+      "name": "polo.security.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用安全模块的全部自动装配能力。"
+        },
+        {
+          "value": false,
+          "description": "关闭安全模块，既不注册鉴权能力也不注册上下文桥接 Bean。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.auth-enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用认证主链路，包括 JWT、拦截器与会话能力。"
+        },
+        {
+          "value": false,
+          "description": "关闭认证主链路，仅保留安全上下文桥接相关 Bean。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.jwt.session-enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用 Redis 会话、多设备管理、登出控制等能力。"
+        },
+        {
+          "value": false,
+          "description": "关闭服务端会话，仅进行 JWT 校验。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.jwt.allow-token-pair",
+      "values": [
+        {
+          "value": true,
+          "description": "启用 accessToken + refreshToken 双 token 模式。"
+        },
+        {
+          "value": false,
+          "description": "仅返回 accessToken。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.jwt.refresh-rotation",
+      "values": [
+        {
+          "value": true,
+          "description": "每次刷新时都会替换旧的 Refresh Token。"
+        },
+        {
+          "value": false,
+          "description": "刷新时继续复用原有 Refresh Token。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.jwt.allow-concurrent-login",
+      "values": [
+        {
+          "value": true,
+          "description": "允许同一账号在多个设备同时在线。"
+        },
+        {
+          "value": false,
+          "description": "新设备登录时会清退旧设备会话。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.duplicate-submit-enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用防重复提交 AOP。"
+        },
+        {
+          "value": false,
+          "description": "关闭防重复提交切面。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.rate-limit-enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用基于 Redis 的接口限流能力。"
+        },
+        {
+          "value": false,
+          "description": "关闭接口限流能力。"
+        }
+      ]
+    },
+    {
+      "name": "polo.security.qr-code-enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用二维码登录相关服务。"
+        },
+        {
+          "value": false,
+          "description": "关闭二维码登录能力。"
+        }
+      ]
+    }
+  ]
+}

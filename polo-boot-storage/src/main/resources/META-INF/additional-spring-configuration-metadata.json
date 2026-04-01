@@ -1,0 +1,203 @@
+{
+  "properties": [
+    {
+      "name": "polo.storage.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用存储模块自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.storage.type",
+      "type": "com.polo.boot.storage.properties.StorageProperties$FileType",
+      "description": "默认底层存储类型，可选 MINIO、OSS、COS、LOCAL、CUSTOM。"
+    },
+    {
+      "name": "polo.storage.minio.minio-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 MinIO 默认实现。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.storage.minio.endpoint",
+      "type": "java.lang.String",
+      "description": "MinIO 服务地址，例如 http://127.0.0.1:9000。"
+    },
+    {
+      "name": "polo.storage.minio.access-key",
+      "type": "java.lang.String",
+      "description": "MinIO Access Key。"
+    },
+    {
+      "name": "polo.storage.minio.secret-key",
+      "type": "java.lang.String",
+      "description": "MinIO Secret Key。"
+    },
+    {
+      "name": "polo.storage.minio.bucket",
+      "type": "java.lang.String",
+      "description": "默认文件桶名称。"
+    },
+    {
+      "name": "polo.storage.minio.public-url",
+      "type": "java.lang.String",
+      "description": "文件对外访问地址前缀，通常用于拼接最终可访问 URL。"
+    },
+    {
+      "name": "polo.storage.oss.oss-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 OSS 文件存储实现。"
+    },
+    {
+      "name": "polo.storage.oss.end-point",
+      "type": "java.lang.String",
+      "description": "OSS 服务地址。"
+    },
+    {
+      "name": "polo.storage.oss.bucket",
+      "type": "java.lang.String",
+      "description": "OSS 默认存储桶名称。"
+    },
+    {
+      "name": "polo.storage.oss.access-key",
+      "type": "java.lang.String",
+      "description": "OSS Access Key。"
+    },
+    {
+      "name": "polo.storage.oss.secret-key",
+      "type": "java.lang.String",
+      "description": "OSS Secret Key。"
+    },
+    {
+      "name": "polo.storage.oss.public-url",
+      "type": "java.lang.String",
+      "description": "OSS 文件对外访问地址前缀。"
+    },
+    {
+      "name": "polo.storage.cos.cos-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用腾讯云 COS 文件存储实现。"
+    },
+    {
+      "name": "polo.storage.cos.region",
+      "type": "java.lang.String",
+      "description": "COS 所属地域，例如 ap-shanghai。"
+    },
+    {
+      "name": "polo.storage.cos.bucket",
+      "type": "java.lang.String",
+      "description": "COS 存储桶名称。"
+    },
+    {
+      "name": "polo.storage.cos.secret-id",
+      "type": "java.lang.String",
+      "description": "腾讯云 SecretId。"
+    },
+    {
+      "name": "polo.storage.cos.secret-key",
+      "type": "java.lang.String",
+      "description": "腾讯云 SecretKey。"
+    },
+    {
+      "name": "polo.storage.cos.public-url",
+      "type": "java.lang.String",
+      "description": "COS 文件对外访问地址前缀。"
+    },
+    {
+      "name": "polo.storage.local.local-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用本地文件存储实现。"
+    },
+    {
+      "name": "polo.storage.local.local-path",
+      "type": "java.lang.String",
+      "description": "本地文件根目录。"
+    },
+    {
+      "name": "polo.storage.local.security-key",
+      "type": "java.lang.String",
+      "description": "本地签名 URL 使用的安全密钥。"
+    },
+    {
+      "name": "polo.storage.upload.path-prefix",
+      "type": "java.lang.String",
+      "description": "默认存储路径前缀。"
+    },
+    {
+      "name": "polo.storage.upload.max-size",
+      "type": "java.lang.Long",
+      "description": "默认单文件最大大小，单位字节。"
+    },
+    {
+      "name": "polo.storage.upload.allowed-types",
+      "type": "java.util.List<java.lang.String>",
+      "description": "默认 MIME 类型白名单。为空表示不限制。"
+    },
+    {
+      "name": "polo.storage.upload.allowed-extensions",
+      "type": "java.util.List<java.lang.String>",
+      "description": "默认文件扩展名白名单。为空表示不限制。"
+    },
+    {
+      "name": "polo.storage.upload.generate-thumbnail",
+      "type": "java.lang.Boolean",
+      "description": "是否默认生成缩略图。"
+    },
+    {
+      "name": "polo.storage.upload.thumbnail-width",
+      "type": "java.lang.Integer",
+      "description": "默认缩略图宽度。"
+    },
+    {
+      "name": "polo.storage.upload.thumbnail-height",
+      "type": "java.lang.Integer",
+      "description": "默认缩略图高度。"
+    },
+    {
+      "name": "polo.storage.upload.private-access",
+      "type": "java.lang.Boolean",
+      "description": "是否默认生成签名访问链接。"
+    },
+    {
+      "name": "polo.storage.upload.signature-expire",
+      "type": "java.lang.Integer",
+      "description": "默认签名访问链接过期秒数。"
+    },
+    {
+      "name": "polo.storage.upload.filename-strategy",
+      "type": "com.polo.boot.storage.annotation.UploadFile$FilenameStrategy",
+      "description": "默认文件名生成策略。"
+    },
+    {
+      "name": "polo.storage.delete.delete-thumbnail-on-delete",
+      "type": "java.lang.Boolean",
+      "description": "删除原文件时是否同时尝试删除缩略图。默认关闭。"
+    },
+    {
+      "name": "polo.storage.delete.allow-bucket-delete",
+      "type": "java.lang.Boolean",
+      "description": "是否允许执行删除第三方存储桶操作。默认关闭，避免误删整个 bucket。"
+    },
+    {
+      "name": "polo.storage.chunk.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用分片断点续传服务。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.storage.chunk.temp-dir",
+      "type": "java.lang.String",
+      "description": "分片临时目录。"
+    },
+    {
+      "name": "polo.storage.chunk.delete-after-complete",
+      "type": "java.lang.Boolean",
+      "description": "合并上传成功后是否自动删除本地分片。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.storage.chunk.merge-buffer-size",
+      "type": "java.lang.Integer",
+      "description": "合并分片时的缓冲区大小，单位字节。"
+    }
+  ]
+}

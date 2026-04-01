@@ -1,0 +1,72 @@
+{
+  "properties": [
+    {
+      "name": "polo.validation.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 validation 模块自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.validation.input-content.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用内容安全校验相关 Bean。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.validation.input-content.default-ai-threshold",
+      "type": "java.lang.Double",
+      "description": "AI 内容检测默认阈值。",
+      "defaultValue": 0.8
+    },
+    {
+      "name": "polo.validation.input-content.word-library.built-in-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用内置敏感词词库。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.validation.input-content.word-library.built-in-path",
+      "type": "java.lang.String",
+      "description": "内置敏感词资源目录。"
+    },
+    {
+      "name": "polo.validation.input-content.word-library.dynamic-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用动态词库加载。",
+      "defaultValue": false
+    },
+    {
+      "name": "polo.validation.input-content.word-library.redis-key",
+      "type": "java.lang.String",
+      "description": "动态词库在 Redis 中的 Hash Key。"
+    },
+    {
+      "name": "polo.validation.input-content.word-library.refresh-interval",
+      "type": "java.lang.Long",
+      "description": "动态词库刷新间隔，单位毫秒。",
+      "defaultValue": 600000
+    },
+    {
+      "name": "polo.validation.input-content.word-library.database-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用数据库词库 SPI 加载。",
+      "defaultValue": false
+    },
+    {
+      "name": "polo.validation.input-content.ai.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 AI 内容检测。",
+      "defaultValue": false
+    },
+    {
+      "name": "polo.validation.input-content.ai.api-url",
+      "type": "java.lang.String",
+      "description": "第三方 AI 内容检测接口地址。"
+    },
+    {
+      "name": "polo.validation.input-content.ai.api-key",
+      "type": "java.lang.String",
+      "description": "第三方 AI 内容检测接口鉴权 Key。"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+DEL content:security:words
+
+HSET content:security:words "煽动颠覆" "POLITICS|5"
+HSET content:security:words "分裂国家" "POLITICS|5"
+HSET content:security:words "非法集会" "POLITICS|4"
+
+HSET content:security:words "招嫖" "PORNOGRAPHY|5"
+HSET content:security:words "约炮" "PORNOGRAPHY|4"
+HSET content:security:words "裸聊" "PORNOGRAPHY|4"
+
+HSET content:security:words "持刀伤人" "VIOLENCE|5"
+HSET content:security:words "恐怖袭击" "VIOLENCE|5"
+HSET content:security:words "报复社会" "VIOLENCE|5"
+
+HSET content:security:words "种族歧视" "DISCRIMINATION|4"
+HSET content:security:words "地域黑" "DISCRIMINATION|3"
+HSET content:security:words "仇恨言论" "DISCRIMINATION|4"
+
+HSET content:security:words "刷单返利" "GAMBLING|5"
+HSET content:security:words "私彩" "GAMBLING|4"
+HSET content:security:words "杀猪盘" "GAMBLING|5"
+
+HSET content:security:words "冰毒" "DRUGS|5"
+HSET content:security:words "海洛因" "DRUGS|5"
+HSET content:security:words "毒品交易" "DRUGS|5"
+
+HSET content:security:words "身份证正反面" "PRIVACY|4"
+HSET content:security:words "银行卡四件套" "PRIVACY|5"
+HSET content:security:words "验证码代收" "PRIVACY|5"
+
+HSET content:security:words "加V领取" "ADVERTISING|3"
+HSET content:security:words "点击链接" "ADVERTISING|3"
+HSET content:security:words "引流私聊" "ADVERTISING|4"

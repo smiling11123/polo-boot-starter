@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "polo.web.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Web 模块自动装配。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.web.exception-handler-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用全局异常处理器。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.web.operation-log-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用操作日志切面与默认日志记录器。",
+      "defaultValue": true
+    }
+  ]
+}

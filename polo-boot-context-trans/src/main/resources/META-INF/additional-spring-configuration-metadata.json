@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "polo.context-trans.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用上下文透传模块。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.context-trans.enable-async",
+      "type": "java.lang.Boolean",
+      "description": "是否自动开启 @Async 支持。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.context-trans.propagate-upload-context",
+      "type": "java.lang.Boolean",
+      "description": "是否尝试透传 UploadContext；仅在 polo.storage.enabled=true 时生效。",
+      "defaultValue": true
+    },
+    {
+      "name": "polo.context-trans.register-default-executors",
+      "type": "java.lang.Boolean",
+      "description": "是否自动注册 taskExecutor 和 ioExecutor。",
+      "defaultValue": true
+    }
+  ]
+}

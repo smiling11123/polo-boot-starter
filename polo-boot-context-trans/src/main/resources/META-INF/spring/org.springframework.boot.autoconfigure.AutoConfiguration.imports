@@ -1,0 +1,2 @@
+com.polo.boot.context.trans.config.AsyncConfig
+com.polo.boot.context.trans.config.TaskDecoratorAutoConfiguration
