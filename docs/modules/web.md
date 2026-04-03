@@ -92,13 +92,5 @@ public Result<?> create(@RequestBody OrderCreateRequest request) {
 - 你自己接的 ELK / Loki / 其他日志系统
 
 `polo-boot-web` 本身不强制把日志落库。  
-如果你需要操作日志持久化，建议在后续扩展专门的日志存储实现。
+如果你需要操作日志持久化，建议实现LogRecorder重写record方法完成日志存储实现。
 
-## 和 `api-doc` 的关系
-
-现在 [`ApiOperation`](../../polo-boot-api-doc/src/main/java/com/polo/boot/api/doc/annotation/ApiOperation.java) 已经和 `OperationLog` 解耦：
-
-- `@ApiOperation` 只负责文档
-- `@OperationLog` 只负责日志
-
-如果你两者都需要，请显式同时标注。

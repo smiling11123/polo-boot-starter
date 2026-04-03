@@ -184,7 +184,7 @@ public class DbLogRecorder implements LogRecorder {
 什么时候要实现：
 
 - 你不想用默认的 `MINIO / OSS / COS / LOCAL`
-- 或者你有公司内部文件中心、私有对象存储
+- 或者你有其他文件中心、私有对象存储
 
 最小示例：
 
