@@ -85,7 +85,7 @@ mvn -q -DskipTests compile
 - [项目自定义注解使用手册](./docs/annotation-principles.md)
 - [全量示例配置（含中文注释）](./demo/src/main/resources/application-example.yml)
 - [Demo 运行与测试说明](./demo/README.md)
-- [Demo 接口测试清单（Postman / Apifox）](./docs/demo-api-test-checklist.md)
+- [Demo 接口测试清单（Postman / Apifox）](demo/demo-api-test-checklist.md)
 - [Postman Collection 与环境模板](./docs/postman/README.md)
 - [内容安全校验使用说明](./docs/validation-content-security.md)
 - [Redis 动态词库初始化脚本](./docs/redis/content-security-words.redis)

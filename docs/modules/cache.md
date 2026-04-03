@@ -62,6 +62,10 @@ User user = redisService.get("user:1", User.class);
 ```
 
 ```java
+User user = redisService.get("user:1", new TypeReference<T>() {});
+```
+
+```java
 redisService.delete("user:1");
 ```
 

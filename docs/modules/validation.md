@@ -132,7 +132,6 @@ public Result<?> create(@Valid @RequestBody PostCreateRequest request) {
 
 补充说明：
 
-- 当前不是按固定枚举去找文件，而是扫描 `built-in-path` 目录下的所有 `.txt` 文件
 - 文件名去掉扩展名后，就是该词库文件的分类编码
 - 目前默认只扫描当前目录，不递归子目录
 
@@ -160,8 +159,6 @@ demo 已提供动态词库管理接口：
 - `POST /validate/dynamic-words/refresh`
 
 它们会直接读写 Redis 动态词库，并立即影响当前应用内存词树，不必等待定时刷新。
-
-动态词库中的 `category` 现在支持用户自定义字符串分类，不再被内部枚举硬限制。项目仍保留了一组推荐分类编码，例如 `GAMBLING`、`ADVERTISING`，但它们只是默认约定，不是强约束。
 
 本地词库加载也不再依赖固定分类枚举，而是扫描 `built-in-path` 目录下的所有 `.txt` 文件，并把“文件名去掉扩展名”作为分类编码。
 

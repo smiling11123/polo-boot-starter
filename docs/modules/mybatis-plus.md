@@ -134,7 +134,7 @@ public List<OrderEntity> pageOrders() {
 
 - [`AutoFillField.java`](../../polo-boot-mybatis-plus/src/main/java/com/polo/boot/mybatis/plus/annotation/AutoFillField.java)
 
-并且建议同时配合 MyBatis-Plus 的 `@TableField(fill = ...)`，这样 MyBatis-Plus 才会稳定触发 `MetaObjectHandler`。
+同时配合 MyBatis-Plus 的 `@TableField(fill = ...)`，这样 MyBatis-Plus 才会稳定触发 `MetaObjectHandler`。
 
 示例：
 

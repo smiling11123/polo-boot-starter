@@ -99,24 +99,6 @@ public Result<?> list() {
 }
 ```
 
-## 和日志的关系
-
-当前 [`ApiOperation`](../../polo-boot-api-doc/src/main/java/com/polo/boot/api/doc/annotation/ApiOperation.java) 已经与 `@OperationLog` 解耦：
-
-- `@ApiOperation` 只负责文档
-- `@OperationLog` 只负责日志
-
-如果你还需要操作日志，请显式叠加：
-
-```java
-@ApiOperation(value = "创建订单", description = "创建一条新订单")
-@OperationLog(module = "订单中心", desc = "创建订单")
-@PostMapping("/orders")
-public Result<?> create() {
-    return Result.success();
-}
-```
-
 ## Swagger 地址
 
 默认情况下可访问：
@@ -132,4 +114,3 @@ public Result<?> create() {
 
 - `/swagger-ui/index.html` 是页面
 - `/v3/api-docs` 和 `/v3/api-docs/{group}` 是 OpenAPI JSON 数据源
-- 浏览器直接打开 `/v3/api-docs/user` 看到整页 JSON 是正常行为，不是页面出错

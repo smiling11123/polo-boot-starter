@@ -23,7 +23,7 @@ import java.util.Map;
 public class UserController {
 
     @GetMapping("/me")
-    @DataScope(type = DataScopeType.SELF_ONLY)
+    @DataScope(type = DataScopeType.SELF_ONLY, userColumn = "user_id")
     @ApiOperation(value = "获取当前用户", description = "返回当前登录用户信息")
     @OperationLog(module = "用户中心", type = OperationType.QUERY, desc = "获取当前用户")
     public Result<LoginUser> me(@CurrentUser LoginUser loginUser) {
@@ -47,7 +47,7 @@ public class UserController {
 
     @RequirePermission("system:user:list")
     @GetMapping("/list")
-    @DataScope(type = DataScopeType.DEPT_AND_CHILD)
+    @DataScope(type = DataScopeType.DEPT_AND_CHILD, deptColumn = "dept_id")
     @ApiOperation(value = "查询用户列表", description = "管理员查询用户列表示例")
     @OperationLog(module = "用户中心", type = OperationType.QUERY, desc = "查询用户列表")
     public Result<List<Map<String, Object>>> list() {
@@ -93,7 +93,7 @@ public class UserController {
     }
 
     @GetMapping("/custom-scope")
-    @DataScope(type = DataScopeType.CUSTOM, customCondition = "create_by = #{userId}")
+    @DataScope(type = DataScopeType.CUSTOM, customCondition = "is_deleted = '1'")
     @ApiOperation(value = "自定义数据权限", description = "演示 DataScope CUSTOM（自定义 SQL 条件）")
     @OperationLog(module = "用户中心", type = OperationType.QUERY, desc = "自定义数据权限查询")
     public Result<List<Map<String, Object>>> customScope() {
