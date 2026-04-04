@@ -5,6 +5,7 @@ import com.polo.boot.core.exception.BizException;
 import com.polo.boot.core.model.Result;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -64,6 +65,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public Result<?> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
         return Result.fail(ErrorCode.PARAM_ERROR.getCode(), "上传文件超过服务器允许的大小限制，请调整文件大小后重试");
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsableException(AsyncRequestNotUsableException e) {
+        log.debug("[GlobalExceptionHandler] 客户端已中断响应输出，忽略异常: {}", e.getMessage());
     }
 
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)

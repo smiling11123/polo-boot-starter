@@ -4,6 +4,10 @@
 
 如果你是第一次接触这个项目，建议先跑 demo，再回头按模块阅读源码和文档。
 
+如果你想直接做前后端联调，仓库里还提供了一个 Vue 3 测试工作台：
+
+- [../demo-FrontEnd/README.md](../demo-FrontEnd/README.md)
+
 ## demo 覆盖了什么
 
 - 登录、刷新 token、设备管理、下线设备
@@ -14,6 +18,8 @@
 - 参数校验、内容安全、动态词库管理
 - 限流、防重复提交、异常处理
 - OpenAPI / Swagger 分组展示
+- 二维码登录前后端联调
+- Vue 3 文件上传下载 / 二维码登录测试工作台
 
 ## 运行环境
 
@@ -48,6 +54,14 @@ mvn -q -DskipTests compile
 mvn -pl demo spring-boot:run
 ```
 
+如果还要启动前端测试页，再在仓库根目录另开一个终端进入 `demo-FrontEnd`：
+
+```bash
+cd demo-FrontEnd
+npm install
+npm run dev
+```
+
 ## 默认信息
 
 - 端口：`8080`
@@ -61,6 +75,10 @@ mvn -pl demo spring-boot:run
 - [`src/main/resources/application.yml`](./src/main/resources/application.yml)
 - [`src/main/resources/application-example.yml`](./src/main/resources/application-example.yml)
 
+前端测试页说明：
+
+- [`../demo-FrontEnd/README.md`](../demo-FrontEnd/README.md)
+
 ## Swagger
 
 - Swagger UI：[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
@@ -73,8 +91,10 @@ mvn -pl demo spring-boot:run
 - Authentication
 - User APIs
 - File APIs
+- Validation APIs
 - Context Transfer APIs
 - MyBatis Demo APIs
+- Exception APIs
 
 说明：
 
@@ -101,6 +121,10 @@ mvn -pl demo spring-boot:run
 
 - `POST /auth/login`
 - `POST /auth/refresh`
+- `GET /auth/qrcode/generate`
+- `GET /auth/qrcode/check`
+- `POST /auth/qrcode/scan`
+- `POST /auth/qrcode/confirm`
 - `GET /auth/devices`
 - `POST /auth/logout`
 - `POST /auth/logout-all`
@@ -170,6 +194,7 @@ mvn -pl demo spring-boot:run
 ## 测试资源
 
 - [Demo 接口测试清单](../docs/demo-api-test-checklist.md)
+- [前端 Demo 使用说明](../demo-FrontEnd/README.md)
 
 ## 建议
 

@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
@@ -75,7 +76,8 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
                     request.getContentType(),
                     request.getTotalSize(),
                     request.getTotalChunks(),
-                    ChunkUploadStatus.INIT
+                    ChunkUploadStatus.INIT,
+                    List.of()
             );
             saveMeta(meta);
             syncControl(meta);
@@ -115,7 +117,8 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
             }
 
             writeChunk(uploadId, chunkIndex, chunk, control);
-            ChunkMeta currentMeta = loadMeta(uploadId);
+            ChunkMeta currentMeta = loadMeta(uploadId).withUploadedChunk(chunkIndex);
+            saveMeta(currentMeta);
             updateControlStatus(control, currentMeta.status());
             return buildState(currentMeta);
         } finally {
@@ -134,8 +137,7 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
             updateControlStatus(control, latestMeta.status());
             ensureCanComplete(control.status().get());
 
-            List<Integer> uploadedChunks = listUploadedChunks(uploadId);
-            if (uploadedChunks.size() != latestMeta.totalChunks()) {
+            if (!latestMeta.readyToComplete()) {
                 throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "分片未上传完整，无法合并");
             }
 
@@ -262,7 +264,7 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
     }
 
     private ChunkUploadState buildState(ChunkMeta meta) {
-        List<Integer> uploadedChunks = listUploadedChunks(meta.uploadId());
+        List<Integer> uploadedChunks = meta.uploadedChunks();
         return ChunkUploadState.builder()
                 .uploadId(meta.uploadId())
                 .originalFilename(meta.originalFilename())
@@ -271,15 +273,12 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
                 .totalChunks(meta.totalChunks())
                 .status(meta.status())
                 .uploadedChunks(uploadedChunks)
-                .uploadedCount(uploadedChunks.size())
-                .readyToComplete(meta.status() != ChunkUploadStatus.ABORTED
-                        && meta.status() != ChunkUploadStatus.COMPLETING
-                        && meta.status() != ChunkUploadStatus.COMPLETED
-                        && uploadedChunks.size() == meta.totalChunks())
+                .uploadedCount(meta.uploadedCount())
+                .readyToComplete(meta.readyToComplete())
                 .build();
     }
 
-    private List<Integer> listUploadedChunks(String uploadId) {
+    private List<Integer> scanUploadedChunks(String uploadId) {
         Path chunksDir = sessionDir(uploadId).resolve(CHUNKS_DIR);
         if (Files.notExists(chunksDir)) {
             return List.of();
@@ -313,7 +312,8 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
                     properties.getProperty("contentType"),
                     Long.parseLong(properties.getProperty("totalSize")),
                     Integer.parseInt(properties.getProperty("totalChunks")),
-                    ChunkUploadStatus.valueOf(properties.getProperty("status", ChunkUploadStatus.INIT.name()))
+                    ChunkUploadStatus.valueOf(properties.getProperty("status", ChunkUploadStatus.INIT.name())),
+                    resolveUploadedChunks(uploadId, properties)
             );
         } catch (IOException ex) {
             throw new BizException(ErrorCode.STORAGE_ERROR.getCode(), "读取分片元数据失败");
@@ -329,6 +329,8 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
         properties.setProperty("totalSize", String.valueOf(meta.totalSize()));
         properties.setProperty("totalChunks", String.valueOf(meta.totalChunks()));
         properties.setProperty("status", meta.status().name());
+        properties.setProperty("uploadedCount", String.valueOf(meta.uploadedCount()));
+        properties.setProperty("uploadedChunks", encodeUploadedChunks(meta.uploadedChunks()));
         Path metaFile = sessionDir(meta.uploadId()).resolve(META_FILE);
         try (BufferedOutputStream outputStream = new BufferedOutputStream(
                 Files.newOutputStream(metaFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
@@ -336,6 +338,39 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
         } catch (IOException ex) {
             throw new BizException(ErrorCode.STORAGE_ERROR.getCode(), "保存分片元数据失败");
         }
+    }
+
+    private List<Integer> resolveUploadedChunks(String uploadId, Properties properties) {
+        String rawUploadedChunks = properties.getProperty("uploadedChunks");
+        if (!StringUtils.hasText(rawUploadedChunks)) {
+            return scanUploadedChunks(uploadId);
+        }
+        List<Integer> chunks = decodeUploadedChunks(rawUploadedChunks);
+        String uploadedCount = properties.getProperty("uploadedCount");
+        if (StringUtils.hasText(uploadedCount) && Integer.parseInt(uploadedCount) == chunks.size()) {
+            return chunks;
+        }
+        return chunks;
+    }
+
+    private String encodeUploadedChunks(List<Integer> uploadedChunks) {
+        if (uploadedChunks == null || uploadedChunks.isEmpty()) {
+            return "";
+        }
+        return uploadedChunks.stream()
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+    }
+
+    private List<Integer> decodeUploadedChunks(String rawUploadedChunks) {
+        return java.util.Arrays.stream(rawUploadedChunks.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .map(Integer::parseInt)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private SessionControl syncControl(ChunkMeta meta) {
@@ -439,9 +474,31 @@ public class FileSystemChunkUploadService implements ChunkUploadService {
                              String contentType,
                              long totalSize,
                              int totalChunks,
-                             ChunkUploadStatus status) {
+                             ChunkUploadStatus status,
+                             List<Integer> uploadedChunks) {
         private ChunkMeta withStatus(ChunkUploadStatus newStatus) {
-            return new ChunkMeta(uploadId, fieldName, originalFilename, contentType, totalSize, totalChunks, newStatus);
+            return new ChunkMeta(uploadId, fieldName, originalFilename, contentType, totalSize, totalChunks, newStatus, uploadedChunks);
+        }
+
+        private ChunkMeta withUploadedChunk(int chunkIndex) {
+            if (uploadedChunks.contains(chunkIndex)) {
+                return this;
+            }
+            List<Integer> updated = new ArrayList<>(uploadedChunks);
+            updated.add(chunkIndex);
+            Collections.sort(updated);
+            return new ChunkMeta(uploadId, fieldName, originalFilename, contentType, totalSize, totalChunks, status, List.copyOf(updated));
+        }
+
+        private int uploadedCount() {
+            return uploadedChunks.size();
+        }
+
+        private boolean readyToComplete() {
+            return status != ChunkUploadStatus.ABORTED
+                    && status != ChunkUploadStatus.COMPLETING
+                    && status != ChunkUploadStatus.COMPLETED
+                    && uploadedChunks.size() == totalChunks;
         }
     }
 

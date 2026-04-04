@@ -1,8 +1,8 @@
 # polo-boot-starter
 
-`polo-boot-starter` 是一个面向 Spring Boot 3 的多模块后端 starter 项目。
+`polo-boot-starter` 是一个面向 Spring Boot 3 的多模块后端 starter 项目，聚焦后台项目里高频重复的基础设施能力。
 
-它的目标不是做一个“大而全的框架”，而是把后台项目里高频重复的基础设施能力拆成可按需组合的模块，让业务项目可以：
+它不是“大而全”的单体框架，而是把统一返回、异常处理、认证鉴权、文件存储、参数校验、数据权限、接口文档等能力拆成可按需组合的模块，让业务项目可以：
 
 - 按需引入
 - 自动装配
@@ -35,6 +35,7 @@
 | `polo-boot-mybatis-plus` | MyBatis-Plus 分页、乐观锁、租户、数据权限、自动填充 | 使用 MyBatis-Plus 的业务系统 |
 | `polo-boot-api-doc` | OpenAPI / Swagger 自动装配、分组、默认响应 | 接口文档展示 |
 | `demo` | 可直接运行的示例工程 | 第一次了解项目时优先看这个 |
+| `demo-FrontEnd` | Vue 3 测试工作台 | 文件上传下载、二维码登录联调演示 |
 
 ## 你会得到哪些能力
 
@@ -77,25 +78,29 @@ mvn -q -DskipTests compile
 第一次体验建议直接运行 demo，再按模块回看源码和文档：
 
 - [demo/README.md](./demo/README.md)
+- [demo-FrontEnd/README.md](./demo-FrontEnd/README.md)
 
 ## 文档导航
 
 - [模块使用说明目录](./docs/modules/README.md)
+- [Demo 运行与测试说明](./demo/README.md)
+- [前端 Demo 使用说明](./demo-FrontEnd/README.md)
 - [扩展点与自定义接口手册](./docs/extension-points.md)
 - [项目自定义注解使用手册](./docs/annotation-principles.md)
 - [全量示例配置](./demo/src/main/resources/application-example.yml)
-- [Demo 运行与测试说明](./demo/README.md)
-- [Demo 接口测试清单](demo/demo-api-test-checklist.md)
+- [Demo 接口测试清单](./demo/demo-api-test-checklist.md)
 - [Redis 动态词库初始化脚本](./docs/redis/content-security-words.redis)
 
 ## 推荐阅读顺序
 
 1. 先看 [demo/README.md](./demo/README.md)
-2. 再看 [docs/modules/README.md](./docs/modules/README.md)
-3. 接着按 `core -> web -> security -> context-trans -> storage -> validation -> mybatis-plus` 阅读
-4. 最后再回到 demo 对照接口和配置理解整条链路
+2. 如果要联调页面，再看 [demo-FrontEnd/README.md](./demo-FrontEnd/README.md)
+3. 再看 [docs/modules/README.md](./docs/modules/README.md)
+4. 接着按 `core -> web -> security -> context-trans -> storage -> validation -> mybatis-plus` 阅读
+5. 最后再回到 demo 对照接口和配置理解整条链路
 
 ## 注意
 
-1. 本项目部分功能开发和测试未完成，项目暂时还是个半成品
-2. 修改、使用、二次分发请注明出处
+1. 项目仍在持续演进中，部分接口、配置项和 demo 细节后续可能继续调整
+2. 默认实现偏向“通用后台项目”场景，复杂业务建议优先通过 SPI 或自定义 Bean 做扩展
+3. 修改、使用和二次分发请遵循仓库根目录中的 Apache 2.0 许可证

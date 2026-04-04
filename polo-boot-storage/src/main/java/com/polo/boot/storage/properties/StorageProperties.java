@@ -3,6 +3,7 @@ package com.polo.boot.storage.properties;
 import com.polo.boot.storage.annotation.UploadFile;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.util.unit.DataSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,9 +55,10 @@ public class StorageProperties {
         private String pathPrefix = "uploads";
 
         /**
-         * 默认单文件最大大小（字节）。
+         * 默认单文件最大大小。
+         * 支持 Spring Boot DataSize 格式，例如 10MB、512KB、1GB。
          */
-        private long maxSize = 10 * 1024 * 1024L;
+        private DataSize maxSize = DataSize.ofMegabytes(10);
 
         /**
          * 默认 MIME 类型白名单。为空表示不限制。

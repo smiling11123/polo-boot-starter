@@ -124,8 +124,8 @@
     },
     {
       "name": "polo.storage.upload.max-size",
-      "type": "java.lang.Long",
-      "description": "默认单文件最大大小，单位字节。"
+      "type": "org.springframework.util.unit.DataSize",
+      "description": "默认单文件最大大小，支持 10MB、512KB、1GB 这类写法。"
     },
     {
       "name": "polo.storage.upload.allowed-types",

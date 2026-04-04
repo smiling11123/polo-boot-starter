@@ -20,7 +20,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +36,7 @@ public class SensitiveWordManager {
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Map<Character, Node> wordTree = new HashMap<>();
     private final Map<String, Set<String>> categoryWords = new HashMap<>();
+    private int maxWordLength;
 
     public SensitiveWordManager(ValidationProperties properties,
                                 StringRedisTemplate redisTemplate,
@@ -94,7 +94,8 @@ public class SensitiveWordManager {
                     results.add(new MatchResult(i, endPos, word.toString(), node.category, node.level));
                 }
 
-                for (int j = i + 1; j < chars.length; j++) {
+                int upperBound = Math.min(chars.length, i + maxWordLength);
+                for (int j = i + 1; j < upperBound; j++) {
                     node = node.next.get(chars[j]);
                     if (node == null) {
                         break;
@@ -140,7 +141,9 @@ public class SensitiveWordManager {
         private final int level;
     }
 
-    @Scheduled(fixedDelayString = "${polo.validation.input-content.word-library.refresh-interval:600000}")
+    @Scheduled(
+            initialDelayString = "${polo.validation.input-content.word-library.refresh-interval:600000}",
+            fixedDelayString = "${polo.validation.input-content.word-library.refresh-interval:600000}")
     public void refreshDynamicWords() {
         ValidationProperties.WordLibraryProperties wordLibrary = properties.getInputContent().getWordLibrary();
         if (!wordLibrary.isDynamicEnabled() && !wordLibrary.isDatabaseEnabled()) {
@@ -217,6 +220,7 @@ public class SensitiveWordManager {
         try {
             wordTree.clear();
             categoryWords.clear();
+            maxWordLength = 0;
             loadBuiltInWords();
             loadDynamicWords();
             loadDatabaseWords();
@@ -333,6 +337,7 @@ public class SensitiveWordManager {
             currentNode.category = normalizedCategory;
             currentNode.level = level;
         }
+        maxWordLength = Math.max(maxWordLength, normalizedWord.length());
         categoryWords.computeIfAbsent(normalizedCategory, key -> new HashSet<>()).add(normalizedWord);
     }
 

@@ -8,16 +8,21 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class RateLimitKeyResolver {
 
-    private final SpelExpressionParser parser = new SpelExpressionParser();
-    private final ParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+    private static final SpelExpressionParser PARSER = new SpelExpressionParser();
+    private static final ParameterNameDiscoverer DISCOVERER = new DefaultParameterNameDiscoverer();
+    private static final ConcurrentMap<String, Expression> EXPRESSION_CACHE = new ConcurrentHashMap<>();
 
     public String resolve(ProceedingJoinPoint point, RateLimit rateLimit) {
         StringBuilder key = new StringBuilder("rate:");
@@ -55,11 +60,17 @@ public class RateLimitKeyResolver {
     }
 
     private String evaluateSpel(String expression, ProceedingJoinPoint point) {
+        if (!StringUtils.hasText(expression)) {
+            return "";
+        }
+        if (!expression.contains("#")) {
+            return expression;
+        }
         MethodSignature signature = (MethodSignature) point.getSignature();
         EvaluationContext context = new StandardEvaluationContext();
 
         // 设置参数
-        String[] paramNames = discoverer.getParameterNames(signature.getMethod());
+        String[] paramNames = DISCOVERER.getParameterNames(signature.getMethod());
         Object[] args = point.getArgs();
         for (int i = 0; i < args.length; i++) {
             if (paramNames != null && i < paramNames.length && StringUtils.hasText(paramNames[i])) {
@@ -69,7 +80,8 @@ public class RateLimitKeyResolver {
             context.setVariable("a" + i, args[i]);
         }
 
-        return parser.parseExpression(expression).getValue(context, String.class);
+        Expression parsedExpression = EXPRESSION_CACHE.computeIfAbsent(expression, PARSER::parseExpression);
+        return parsedExpression.getValue(context, String.class);
     }
 
     private String getCurrentUserId() {

@@ -10,11 +10,14 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class SpelExpressionUtil {
 
     private static final SpelExpressionParser PARSER = new SpelExpressionParser();
     private static final ParameterNameDiscoverer NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
+    private static final ConcurrentMap<String, Expression> EXPRESSION_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 创建 SpEL 上下文
@@ -67,19 +70,38 @@ public class SpelExpressionUtil {
      * 解析表达式
      */
     public static String parse(String expression, EvaluationContext context) {
+        if (expression == null || expression.isBlank()) {
+            return expression;
+        }
         if (!expression.trim().startsWith("#") && !expression.contains("#")) {
             // 纯文本，直接返回
             return expression;
         }
 
         try {
-            Expression exp = PARSER.parseExpression(expression);
+            Expression exp = EXPRESSION_CACHE.computeIfAbsent(expression, PARSER::parseExpression);
             Object value = exp.getValue(context);
             return value != null ? value.toString() : "";
         } catch (Exception e) {
             // 解析失败，返回原表达式
             return "[SpEL解析失败: " + expression + "]";
         }
+    }
+
+    public static boolean referencesResult(String expression) {
+        return containsVariableReference(expression, "result");
+    }
+
+    public static boolean referencesError(String expression) {
+        return containsVariableReference(expression, "error")
+                || containsVariableReference(expression, "errorMsg");
+    }
+
+    private static boolean containsVariableReference(String expression, String variable) {
+        if (expression == null || expression.isBlank()) {
+            return false;
+        }
+        return expression.contains("#" + variable);
     }
 
     /**

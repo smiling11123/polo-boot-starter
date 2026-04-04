@@ -190,9 +190,15 @@ public class UploadController {
         ByteRange range = parseRange(request.getHeader("Range"), metadata.getSize());
         if (range == null) {
             response.setContentLengthLong(metadata.getSize());
-            try (InputStream is = fileUploadService.download(filepath, storageType);
-                 OutputStream os = response.getOutputStream()) {
+            try (InputStream is = fileUploadService.download(filepath, storageType)) {
+                OutputStream os = response.getOutputStream();
                 StreamUtils.copy(is, os);
+                os.flush();
+            } catch (IOException ex) {
+                if (isClientAbort(ex)) {
+                    return;
+                }
+                throw ex;
             }
             return;
         }
@@ -200,9 +206,15 @@ public class UploadController {
         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
         response.setHeader("Content-Range", "bytes " + range.start() + "-" + range.end() + "/" + metadata.getSize());
         response.setContentLengthLong(range.end() - range.start() + 1);
-        try (InputStream is = fileUploadService.download(filepath, storageType, range.start(), range.end());
-             OutputStream os = response.getOutputStream()) {
+        try (InputStream is = fileUploadService.download(filepath, storageType, metadata, range.start(), range.end())) {
+            OutputStream os = response.getOutputStream();
             StreamUtils.copy(is, os);
+            os.flush();
+        } catch (IOException ex) {
+            if (isClientAbort(ex)) {
+                return;
+            }
+            throw ex;
         }
     }
 
@@ -257,6 +269,28 @@ public class UploadController {
         } catch (NumberFormatException ex) {
             throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "Range 请求头格式错误");
         }
+    }
+
+    private boolean isClientAbort(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String simpleName = current.getClass().getSimpleName();
+            if ("AsyncRequestNotUsableException".equals(simpleName) || "ClientAbortException".equals(simpleName)) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null) {
+                String normalized = message.toLowerCase();
+                if (normalized.contains("broken pipe")
+                        || normalized.contains("connection reset")
+                        || normalized.contains("connection aborted")
+                        || message.contains("你的主机中的软件中止了一个已建立的连接")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private record ByteRange(long start, long end) {

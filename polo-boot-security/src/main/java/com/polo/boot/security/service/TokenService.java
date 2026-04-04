@@ -19,7 +19,6 @@ import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -66,18 +65,27 @@ public class TokenService {
 
         if(sessionEnable()){
             DeviceInfo currentDevice = deviceService.resolve(request, clientDevice);
-            cleanupStaleSessions(userId);
+            List<LoginSession> activeSessions = cleanupStaleSessions(userId);
 
             if (!allowConcurrentLogin()) {
-                logoutAll(userId, null);
+                logoutAll(userId, null, activeSessions);
             } else {
-                revokeSameDeviceSessions(userId, currentDevice.getDeviceId());
-                evictOverflowSessions(userId);
+                revokeSameDeviceSessions(userId, currentDevice.getDeviceId(), activeSessions);
+                evictOverflowSessions(userId, activeSessions);
             }
 
             String sessionId = UUID.randomUUID().toString();
             TokenPair tokenPair = issueTokenPair(userPrincipal, sessionId, currentDevice.getDeviceId());
             long now = System.currentTimeMillis();
+            String refreshTokenHash = null;
+            Long refreshExpiresAt = null;
+            String accessTokenHash = null;
+            if (allowTokenPair()) {
+                refreshTokenHash = tokenPair.getRefreshToken() != null ? fingerprint(tokenPair.getRefreshToken()) : null;
+                refreshExpiresAt = tokenPair.getRefreshToken() != null ? now + jwtProperties.getRefreshTokenExpire() * 60 * 1000 : null;
+            } else {
+                accessTokenHash = fingerprint(tokenPair.getAccessToken());
+            }
             LoginSession session = new LoginSession(
                     sessionId,
                     userId,
@@ -90,10 +98,10 @@ public class TokenService {
                     currentDevice.getIp(),
                     LocalDateTime.now(),
                     LocalDateTime.now(),
-                    tokenPair.getRefreshToken() != null ? fingerprint(tokenPair.getRefreshToken()) : null,
-                    tokenPair.getRefreshToken() != null ? now + jwtProperties.getRefreshTokenExpire() * 60 * 1000 : null,
-                    fingerprint(tokenPair.getAccessToken()),
-                    now + jwtProperties.getAccessTokenExpire() * 60 * 1000,
+                    refreshTokenHash,
+                    refreshExpiresAt,
+                    accessTokenHash,
+                    null,
                     extractAttributes(userPrincipal)
             );
             saveSession(session);
@@ -136,7 +144,13 @@ public class TokenService {
         String deviceIdForTokens = session != null ? session.getDeviceId() : null;
 
         if (!allowTokenPair()) {
-            return jwtService.createTokenPair(loginUser, sessionIdForTokens, deviceIdForTokens);
+            TokenPair tokenPair = jwtService.createTokenPair(loginUser, sessionIdForTokens, deviceIdForTokens);
+            if (session != null) {
+                session.setAccessTokenHash(fingerprint(tokenPair.getAccessToken()));
+                session.setLastActiveTime(LocalDateTime.now());
+                saveSession(session);
+            }
+            return tokenPair;
         }
 
         String accessToken = jwtService.createAccessToken(loginUser, sessionIdForTokens, deviceIdForTokens);
@@ -287,38 +301,54 @@ public class TokenService {
             return List.of();
         }
 
-        List<LoginSession> sessions = new ArrayList<>();
-        for (String sessionId : sessionIds) {
-            LoginSession session = getSession(userId, sessionId);
-            if (session != null) {
-                sessions.add(session);
+        List<String> sessionIdList = new ArrayList<>(sessionIds);
+        List<String> keys = sessionIdList.stream()
+                .map(sessionId -> buildSessionKey(userId, sessionId))
+                .toList();
+        List<String> payloads = stringRedisTemplate.opsForValue().multiGet(keys);
+        if (payloads == null || payloads.isEmpty()) {
+            removeSessionsFromIndex(userId, sessionIdList);
+            return List.of();
+        }
+
+        List<LoginSession> sessions = new ArrayList<>(payloads.size());
+        List<String> staleSessionIds = new ArrayList<>();
+        for (int index = 0; index < sessionIdList.size(); index++) {
+            String payload = index < payloads.size() ? payloads.get(index) : null;
+            if (!StringUtils.hasText(payload)) {
+                staleSessionIds.add(sessionIdList.get(index));
+                continue;
             }
+            sessions.add(deserialize(payload));
+        }
+        if (!staleSessionIds.isEmpty()) {
+            removeSessionsFromIndex(userId, staleSessionIds);
         }
         return sessions;
     }
 
-    private void cleanupStaleSessions(Long userId) {
-        getActiveSessions(userId);
+    private List<LoginSession> cleanupStaleSessions(Long userId) {
+        return getActiveSessions(userId);
     }
 
-    private void revokeSameDeviceSessions(Long userId, String deviceId) {
+    private void revokeSameDeviceSessions(Long userId, String deviceId, List<LoginSession> sessions) {
         if (deviceId == null) {
             return;
         }
-        for (LoginSession session : getActiveSessions(userId)) {
+        for (LoginSession session : sessions) {
             if (deviceId.equals(session.getDeviceId())) {
                 deleteSession(userId, session.getSessionId());
             }
         }
     }
 
-    private void evictOverflowSessions(Long userId) {
+    private void evictOverflowSessions(Long userId, List<LoginSession> activeSessions) {
         Integer maxDevices = jwtProperties.getMaxDevices();
         if (maxDevices == null || maxDevices <= 0) {
             return;
         }
 
-        List<LoginSession> sessions = getActiveSessions(userId).stream()
+        List<LoginSession> sessions = activeSessions.stream()
                 .sorted(Comparator.comparing(LoginSession::getLoginTime))
                 .toList();
         int maxExistingSessions = Math.max(maxDevices - 1, 0);
@@ -334,6 +364,28 @@ public class TokenService {
         String userSessionsKey = buildUserSessionsKey(userId);
         stringRedisTemplate.delete(buildSessionKey(userId, sessionId));
         stringRedisTemplate.opsForSet().remove(userSessionsKey, sessionId);
+        Long remaining = stringRedisTemplate.opsForSet().size(userSessionsKey);
+        if (remaining != null && remaining <= 0) {
+            stringRedisTemplate.delete(userSessionsKey);
+        }
+    }
+
+    private void logoutAll(Long userId, String keepSessionId, List<LoginSession> sessions) {
+        if(!jwtProperties.getSessionEnabled()) throw new BizException(ErrorCode.SYSTEM_ERROR.getCode(), "未开启多设备会话管理");
+        for (LoginSession session : sessions) {
+            if (keepSessionId != null && keepSessionId.equals(session.getSessionId())) {
+                continue;
+            }
+            deleteSession(userId, session.getSessionId());
+        }
+    }
+
+    private void removeSessionsFromIndex(Long userId, List<String> sessionIds) {
+        if (sessionIds == null || sessionIds.isEmpty()) {
+            return;
+        }
+        String userSessionsKey = buildUserSessionsKey(userId);
+        stringRedisTemplate.opsForSet().remove(userSessionsKey, sessionIds.toArray(String[]::new));
         Long remaining = stringRedisTemplate.opsForSet().size(userSessionsKey);
         if (remaining != null && remaining <= 0) {
             stringRedisTemplate.delete(userSessionsKey);

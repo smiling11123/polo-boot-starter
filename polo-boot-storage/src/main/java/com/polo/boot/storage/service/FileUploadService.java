@@ -38,6 +38,17 @@ public interface FileUploadService {
     InputStream download(String filepath, String storageType, Long start, Long end);
 
     /**
+     * 按范围下载文件流，并复用调用方已经拿到的元信息，避免重复查询底层存储。
+     */
+    default InputStream download(String filepath,
+                                 String storageType,
+                                 StoredFileMetadata metadata,
+                                 Long start,
+                                 Long end) {
+        return download(filepath, storageType, start, end);
+    }
+
+    /**
      * 获取文件元信息。
      */
     StoredFileMetadata getMetadata(String filepath, String storageType);

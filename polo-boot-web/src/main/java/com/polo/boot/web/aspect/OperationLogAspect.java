@@ -25,7 +25,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Slf4j
@@ -46,6 +45,8 @@ public class OperationLogAspect {
 
         // 2. 构建 SpEL 上下文（此时还没有返回值）
         EvaluationContext context = SpelExpressionUtil.createContext(method, point.getArgs());
+        boolean descReferencesResult = SpelExpressionUtil.referencesResult(operationLog.desc());
+        boolean descReferencesError = SpelExpressionUtil.referencesError(operationLog.desc());
 
         // 3. 解析描述（如果 SpEL 依赖返回值，这里可能解析不完整，需要二次解析）
         String desc = SpelExpressionUtil.parse(operationLog.desc(), context);
@@ -64,15 +65,19 @@ public class OperationLogAspect {
             result = point.proceed();
 
             // 方法成功执行后，将返回值加入上下文，重新解析描述（支持 #result）
-            SpelExpressionUtil.addResult(context, result);
-            desc = SpelExpressionUtil.parse(operationLog.desc(), context);
+            if (descReferencesResult) {
+                SpelExpressionUtil.addResult(context, result);
+                desc = SpelExpressionUtil.parse(operationLog.desc(), context);
+            }
 
             return result;
 
         } catch (Throwable e) {
             error = e;
-            SpelExpressionUtil.addException(context, e);
-            desc = SpelExpressionUtil.parse(operationLog.desc(), context);
+            if (descReferencesError) {
+                SpelExpressionUtil.addException(context, e);
+                desc = SpelExpressionUtil.parse(operationLog.desc(), context);
+            }
 
             // 判断是否忽略该异常
             if (shouldIgnore(e, operationLog.ignoreExceptions())) {
@@ -167,7 +172,11 @@ public class OperationLogAspect {
             if (asyncExecutor != null) {
                 asyncExecutor.execute(task);
             } else {
-                CompletableFuture.runAsync(task);
+                try {
+                    logRecorder.record(record);
+                } catch (Exception e) {
+                    log.error("[OperationLog] 同步兜底记录失败", e);
+                }
             }
         } else {
             try {

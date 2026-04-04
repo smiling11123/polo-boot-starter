@@ -12,7 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,6 +28,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class InputContentValidationService implements ConstraintValidator<InputContent, String> {
+    private static final Pattern PHONE_PATTERN = Pattern.compile("1[3-9]\\d{9}");
+    private static final Pattern ID_CARD_CANDIDATE_PATTERN = Pattern.compile("\\d{17}[\\dXx]|\\d{15}");
+    private static final Pattern BANK_CARD_PATTERN = Pattern.compile("\\d{16,19}");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+
     private final IdCardValidationService idCardValidationService = new IdCardValidationService();
     private final BankCardValidationService bankCardValidationService = new BankCardValidationService();
     private final SensitiveWordManager wordManager;
@@ -29,6 +42,7 @@ public class InputContentValidationService implements ConstraintValidator<InputC
 
     private InputContent annotation;
     private Set<String> categories;
+    private Set<String> ignoreWords;
     private Set<InputContent.CheckType> checkTypes;
 
     @Override
@@ -39,7 +53,13 @@ public class InputContentValidationService implements ConstraintValidator<InputC
                 .map(this::normalizeCategoryCode)
                 .filter(Objects::nonNull)
                 .forEach(this.categories::add);
-        this.checkTypes = new HashSet<>(Arrays.asList(constraintAnnotation.types()));
+        this.ignoreWords = Arrays.stream(constraintAnnotation.ignoreWords())
+                .map(String::trim)
+                .filter(word -> !word.isEmpty())
+                .collect(Collectors.collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
+        this.checkTypes = constraintAnnotation.types().length == 0
+                ? Collections.emptySet()
+                : Collections.unmodifiableSet(EnumSet.copyOf(Arrays.asList(constraintAnnotation.types())));
     }
 
     @Override
@@ -146,16 +166,14 @@ public class InputContentValidationService implements ConstraintValidator<InputC
         List<RegexMatch> matches = new ArrayList<>();
 
         // 手机号
-        Pattern phonePattern = Pattern.compile("1[3-9]\\d{9}");
-        Matcher phoneMatcher = phonePattern.matcher(text);
+        Matcher phoneMatcher = PHONE_PATTERN.matcher(text);
         while (phoneMatcher.find()) {
             matches.add(new RegexMatch(phoneMatcher.start(), phoneMatcher.end(),
                     "PHONE", phoneMatcher.group()));
         }
 
         // 身份证号
-        Pattern idCardPattern = Pattern.compile("\\d{17}[\\dXx]|\\d{15}");
-        Matcher idCardMatcher = idCardPattern.matcher(text);
+        Matcher idCardMatcher = ID_CARD_CANDIDATE_PATTERN.matcher(text);
         while (idCardMatcher.find()) {
             String idCard = idCardMatcher.group();
             if (idCardValidationService.isValid(idCard, context)) {
@@ -165,8 +183,7 @@ public class InputContentValidationService implements ConstraintValidator<InputC
         }
 
         // 银行卡号（16-19位）
-        Pattern bankCardPattern = Pattern.compile("\\d{16,19}");
-        Matcher bankCardMatcher = bankCardPattern.matcher(text);
+        Matcher bankCardMatcher = BANK_CARD_PATTERN.matcher(text);
         while (bankCardMatcher.find()) {
             String card = bankCardMatcher.group();
             if (bankCardValidationService.isValid(card, context)) {
@@ -176,8 +193,7 @@ public class InputContentValidationService implements ConstraintValidator<InputC
         }
 
         // 邮箱
-        Pattern emailPattern = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
-        Matcher emailMatcher = emailPattern.matcher(text);
+        Matcher emailMatcher = EMAIL_PATTERN.matcher(text);
         while (emailMatcher.find()) {
             matches.add(new RegexMatch(emailMatcher.start(), emailMatcher.end(),
                     "EMAIL", emailMatcher.group()));
@@ -189,7 +205,6 @@ public class InputContentValidationService implements ConstraintValidator<InputC
     private List<SensitiveWordManager.MatchResult> filterIgnoreWords(
             List<SensitiveWordManager.MatchResult> matches) {
 
-        Set<String> ignoreWords = new HashSet<>(Arrays.asList(annotation.ignoreWords()));
         if (ignoreWords.isEmpty()) return matches;
 
         return matches.stream()

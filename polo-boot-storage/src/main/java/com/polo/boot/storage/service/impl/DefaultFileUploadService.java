@@ -13,7 +13,6 @@ import com.polo.boot.storage.service.FileStorage;
 import com.polo.boot.storage.service.FileUploadService;
 import com.polo.boot.storage.support.ThumbnailGenerator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,10 +20,18 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.HashMap;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -47,49 +54,80 @@ public class DefaultFileUploadService implements FileUploadService {
         validateFileSize(file, normalized);
 
         String originalFilename = StringUtils.hasText(file.getOriginalFilename()) ? file.getOriginalFilename() : "file";
-        String filename = generateFilename(file, normalized.getFilenameStrategy());
-        String filepath = buildFilepath(normalized.getPathPrefix(), filename);
+        boolean image = isImage(file);
+        boolean stageSource = shouldStageUpload(normalized, image);
         FileStorage storage = resolveStorage(normalized.getStorageType());
+        StagedUpload stagedUpload = null;
 
-        String url = storage.upload(file, filepath);
-        Map<String, Object> metadata = extractMetadata(file);
+        try {
+            String fileMd5 = null;
+            Map<String, Object> metadata;
+            String url;
 
-        UploadResult.UploadResultBuilder resultBuilder = UploadResult.builder()
-                .uploadId(UUID.randomUUID().toString())
-                .fieldName(normalized.getFieldName())
-                .originalFilename(originalFilename)
-                .filename(filename)
-                .filepath(filepath)
-                .url(url)
-                .size(file.getSize())
-                .contentType(file.getContentType())
-                .fileMd5(calculateMd5(file))
-                .storageType(storage.getType())
-                .metadata(metadata);
-
-        if (Boolean.TRUE.equals(normalized.getGenerateThumbnail()) && isImage(file)) {
-            try (InputStream thumbnailInput = thumbnailGenerator.generate(
-                file.getInputStream(),
-                normalized.getThumbnailWidth(),
-                normalized.getThumbnailHeight()
-            )) {
-                String thumbPath = buildFilepath(normalized.getPathPrefix(), "thumbs/" + filename + ".jpg");
-                String thumbUrl = storage.upload(thumbnailInput, -1L, thumbPath, "image/jpeg");
-                resultBuilder.thumbnailUrl(thumbUrl)
-                        .thumbnailWidth(normalized.getThumbnailWidth())
-                        .thumbnailHeight(normalized.getThumbnailHeight());
-            } catch (IOException ex) {
-                throw new BizException(ErrorCode.STORAGE_UPLOAD_ERROR);
+            if (stageSource) {
+                stagedUpload = stageUpload(file, image);
+                fileMd5 = stagedUpload.fileMd5();
+                metadata = stagedUpload.metadata();
+            } else {
+                metadata = createBaseMetadata(file.getSize(), file.getContentType());
             }
-        }
 
-        if (Boolean.TRUE.equals(normalized.getPrivateAccess())) {
-            resultBuilder.signedUrl(storage.generateSignedUrl(filepath, normalized.getSignatureExpire()))
-                    .signedUrlExpire(normalized.getSignatureExpire());
+            String filename = generateFilename(originalFilename, normalized.getFilenameStrategy(), fileMd5);
+            String filepath = buildFilepath(normalized.getPathPrefix(), filename);
+
+            if (stagedUpload != null) {
+                try (InputStream uploadInput = Files.newInputStream(stagedUpload.path(), StandardOpenOption.READ)) {
+                    url = storage.upload(uploadInput, stagedUpload.size(), filepath, file.getContentType());
+                } catch (IOException ex) {
+                    throw new BizException(ErrorCode.STORAGE_UPLOAD_ERROR);
+                }
+            } else {
+                DigestUploadResult digestUploadResult = uploadWithDigest(file, storage, filepath);
+                url = digestUploadResult.url();
+                fileMd5 = digestUploadResult.fileMd5();
+            }
+
+            UploadResult.UploadResultBuilder resultBuilder = UploadResult.builder()
+                    .uploadId(UUID.randomUUID().toString())
+                    .fieldName(normalized.getFieldName())
+                    .originalFilename(originalFilename)
+                    .filename(filename)
+                    .filepath(filepath)
+                    .url(url)
+                    .size(file.getSize())
+                    .contentType(file.getContentType())
+                    .fileMd5(fileMd5)
+                    .storageType(storage.getType())
+                    .metadata(metadata);
+
+            if (Boolean.TRUE.equals(normalized.getGenerateThumbnail()) && image && stagedUpload != null) {
+                try (InputStream thumbnailSource = Files.newInputStream(stagedUpload.path(), StandardOpenOption.READ);
+                     InputStream thumbnailInput = thumbnailGenerator.generate(
+                             thumbnailSource,
+                             normalized.getThumbnailWidth(),
+                             normalized.getThumbnailHeight()
+                     )) {
+                    String thumbPath = buildFilepath(normalized.getPathPrefix(), "thumbs/" + filename + ".jpg");
+                    String thumbUrl = storage.upload(thumbnailInput, -1L, thumbPath, "image/jpeg");
+                    resultBuilder.thumbnailUrl(thumbUrl)
+                            .thumbnailWidth(normalized.getThumbnailWidth())
+                            .thumbnailHeight(normalized.getThumbnailHeight());
+                } catch (IOException ex) {
+                    throw new BizException(ErrorCode.STORAGE_UPLOAD_ERROR);
+                }
+            }
+
+            if (Boolean.TRUE.equals(normalized.getPrivateAccess())) {
+                resultBuilder.signedUrl(storage.generateSignedUrl(filepath, normalized.getSignatureExpire()))
+                        .signedUrlExpire(normalized.getSignatureExpire());
+            }
+
+            UploadResult uploadResult = resultBuilder.build();
+            UploadContext.add(normalized.getFieldName(), List.of(uploadResult));
+            return uploadResult;
+        } finally {
+            deleteTempFile(stagedUpload);
         }
-        UploadResult uploadResult = resultBuilder.build();
-        UploadContext.add(options.getFieldName(), List.of(uploadResult));
-        return resultBuilder.build();
     }
 
     @Override
@@ -116,17 +154,22 @@ public class DefaultFileUploadService implements FileUploadService {
 
     @Override
     public InputStream download(String filepath, String storageType, Long start, Long end) {
+        return download(filepath, storageType, null, start, end);
+    }
+
+    @Override
+    public InputStream download(String filepath, String storageType, StoredFileMetadata metadata, Long start, Long end) {
         if (!StringUtils.hasText(filepath)) {
             throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "文件路径不能为空");
         }
         FileStorage storage = resolveStorage(storageType);
-        StoredFileMetadata metadata = storage.getMetadata(filepath);
         if (start == null && end == null) {
             return storage.getInputStream(filepath);
         }
+        StoredFileMetadata effectiveMetadata = metadata != null ? metadata : storage.getMetadata(filepath);
         long actualStart = start == null ? 0L : start;
-        long actualEnd = end == null ? metadata.getSize() - 1 : end;
-        validateRange(actualStart, actualEnd, metadata.getSize());
+        long actualEnd = end == null ? effectiveMetadata.getSize() - 1 : end;
+        validateRange(actualStart, actualEnd, effectiveMetadata.getSize());
         return storage.getInputStream(filepath, actualStart, actualEnd);
     }
 
@@ -245,7 +288,7 @@ public class DefaultFileUploadService implements FileUploadService {
             normalized.setPathPrefix(defaults.getPathPrefix());
         }
         if (normalized.getMaxSize() == null) {
-            normalized.setMaxSize(defaults.getMaxSize());
+            normalized.setMaxSize(defaults.getMaxSize() == null ? null : defaults.getMaxSize().toBytes());
         }
         if (normalized.getAllowedTypes() == null && defaults.getAllowedTypes() != null && !defaults.getAllowedTypes().isEmpty()) {
             normalized.setAllowedTypes(defaults.getAllowedTypes().toArray(String[]::new));
@@ -316,14 +359,21 @@ public class DefaultFileUploadService implements FileUploadService {
         }
     }
 
-    private String generateFilename(MultipartFile file, UploadFile.FilenameStrategy strategy) {
-        String extension = getExtension(file.getOriginalFilename());
+    private String generateFilename(String originalFilename,
+                                    UploadFile.FilenameStrategy strategy,
+                                    String precomputedMd5) {
+        String extension = getExtension(originalFilename);
         String basename = switch (strategy) {
             case DEFAULT -> UUID.randomUUID().toString().replace("-", "");
             case UUID -> UUID.randomUUID().toString().replace("-", "");
             case TIMESTAMP -> System.currentTimeMillis() + "_" + new Random().nextInt(1000);
-            case HASH -> calculateMd5(file);
-            case ORIGINAL -> sanitizeBaseName(stripExtension(file.getOriginalFilename()));
+            case HASH -> {
+                if (!StringUtils.hasText(precomputedMd5)) {
+                    throw new BizException(ErrorCode.STORAGE_UPLOAD_ERROR.getCode(), "HASH 文件名策略缺少文件摘要");
+                }
+                yield precomputedMd5;
+            }
+            case ORIGINAL -> sanitizeBaseName(stripExtension(originalFilename));
         };
         return StringUtils.hasText(extension) ? basename + "." + extension.toLowerCase() : basename;
     }
@@ -333,30 +383,104 @@ public class DefaultFileUploadService implements FileUploadService {
         return contentType != null && contentType.startsWith("image/");
     }
 
-    private Map<String, Object> extractMetadata(MultipartFile file) {
+    private Map<String, Object> createBaseMetadata(long size, String contentType) {
         Map<String, Object> metadata = new HashMap<>();
-        metadata.put("size", file.getSize());
-        metadata.put("contentType", file.getContentType());
-        if (isImage(file)) {
-            try (InputStream inputStream = file.getInputStream()) {
-                BufferedImage image = ImageIO.read(inputStream);
-                if (image != null) {
-                    metadata.put("width", image.getWidth());
-                    metadata.put("height", image.getHeight());
-                }
-            } catch (IOException ignored) {
-                // 图片元数据提取失败不影响主上传流程
-            }
-        }
+        metadata.put("size", size);
+        metadata.put("contentType", contentType);
         return metadata;
     }
 
-    private String calculateMd5(MultipartFile file) {
-        try (InputStream inputStream = file.getInputStream()) {
-            return DigestUtils.md5DigestAsHex(inputStream);
+    private Map<String, Object> extractImageMetadata(Path path, Map<String, Object> metadata) {
+        Map<String, Object> result = metadata == null ? new HashMap<>() : metadata;
+        try (InputStream inputStream = Files.newInputStream(path, StandardOpenOption.READ)) {
+            BufferedImage image = ImageIO.read(inputStream);
+            if (image != null) {
+                result.put("width", image.getWidth());
+                result.put("height", image.getHeight());
+            }
+        } catch (IOException ignored) {
+            // 图片元数据提取失败不影响主上传流程
+        }
+        return result;
+    }
+
+    private boolean shouldStageUpload(UploadOptions options, boolean image) {
+        return image
+                || Boolean.TRUE.equals(options.getGenerateThumbnail())
+                || options.getFilenameStrategy() == UploadFile.FilenameStrategy.HASH;
+    }
+
+    private StagedUpload stageUpload(MultipartFile file, boolean image) {
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("polo-upload-", ".tmp");
+            MessageDigest digest = md5Digest();
+            try (InputStream inputStream = file.getInputStream();
+                 DigestInputStream digestInputStream = new DigestInputStream(inputStream, digest);
+                 OutputStream outputStream = Files.newOutputStream(
+                         tempFile,
+                         StandardOpenOption.WRITE,
+                         StandardOpenOption.TRUNCATE_EXISTING
+                 )) {
+                digestInputStream.transferTo(outputStream);
+            }
+            String md5 = toHex(digest.digest());
+            Map<String, Object> metadata = createBaseMetadata(file.getSize(), file.getContentType());
+            if (image) {
+                metadata = extractImageMetadata(tempFile, metadata);
+            }
+            return new StagedUpload(tempFile, file.getSize(), md5, metadata);
+        } catch (IOException ex) {
+            deleteTempFile(tempFile);
+            throw new BizException(ErrorCode.STORAGE_UPLOAD_ERROR);
+        }
+    }
+
+    private DigestUploadResult uploadWithDigest(MultipartFile file, FileStorage storage, String filepath) {
+        try {
+            MessageDigest digest = md5Digest();
+            try (InputStream inputStream = file.getInputStream();
+                 DigestInputStream digestInputStream = new DigestInputStream(inputStream, digest)) {
+                String url = storage.upload(digestInputStream, file.getSize(), filepath, file.getContentType());
+                return new DigestUploadResult(url, toHex(digest.digest()));
+            }
         } catch (IOException ex) {
             throw new BizException(ErrorCode.STORAGE_UPLOAD_ERROR);
         }
+    }
+
+    private MessageDigest md5Digest() {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("当前运行环境不支持 MD5", ex);
+        }
+    }
+
+    private String toHex(byte[] bytes) {
+        return HexFormat.of().formatHex(bytes);
+    }
+
+    private void deleteTempFile(StagedUpload stagedUpload) {
+        if (stagedUpload != null) {
+            deleteTempFile(stagedUpload.path());
+        }
+    }
+
+    private void deleteTempFile(Path tempFile) {
+        if (tempFile == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(tempFile);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private record StagedUpload(Path path, long size, String fileMd5, Map<String, Object> metadata) {
+    }
+
+    private record DigestUploadResult(String url, String fileMd5) {
     }
 
     private String buildFilepath(String pathPrefix, String filename) {

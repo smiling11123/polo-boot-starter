@@ -5,6 +5,7 @@ import com.polo.boot.core.exception.BizException;
 import com.polo.boot.storage.model.StoredFileMetadata;
 import com.polo.boot.storage.properties.LocalProperties;
 import com.polo.boot.storage.service.FileStorage;
+import com.polo.boot.storage.support.LimitedInputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
@@ -13,10 +14,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 
 /**
  * 本地文件存储实现。
@@ -53,6 +57,21 @@ public class LocalFileStorage implements FileStorage {
             return Files.newInputStream(path);
         } catch (IOException ex) {
             throw new BizException(ErrorCode.STORAGE_ERROR.getCode(), "获取本地文件流失败: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public InputStream getInputStream(String filepath, long start, long end) {
+        try {
+            Path path = resolvePath(filepath);
+            if (Files.notExists(path)) {
+                throw new BizException(ErrorCode.DATA_NOT_FOUND.getCode(), "文件不存在");
+            }
+            SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ);
+            channel.position(start);
+            return new LimitedInputStream(Channels.newInputStream(channel), end - start + 1);
+        } catch (IOException ex) {
+            throw new BizException(ErrorCode.STORAGE_DOWNLOAD_ERROR.getCode(), "获取本地范围文件流失败: " + ex.getMessage());
         }
     }
 

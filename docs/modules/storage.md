@@ -71,7 +71,7 @@ polo:
       public-url: https://demo-1250000000.cos.ap-shanghai.myqcloud.com
     upload:
       path-prefix: uploads
-      max-size: 10485760
+      max-size: 10MB
       allowed-extensions:
         - jpg
         - jpeg
@@ -112,7 +112,7 @@ polo:
 - `bucket`：默认文件桶
 - `public-url`：对外访问 URL
 - `upload.path-prefix`：全局默认上传目录
-- `upload.max-size`：全局默认单文件大小限制
+- `upload.max-size`：全局默认单文件大小限制，支持 `10MB`、`512KB`、`1GB` 这类更友好的写法
 - `upload.allowed-extensions` / `upload.allowed-types`：全局默认白名单
 - `upload.filename-strategy`：全局默认文件名生成策略
 - `upload.private-access`：全局默认是否走签名访问

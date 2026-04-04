@@ -22,8 +22,8 @@ spring:
       mode: never
   servlet:
     multipart:
-      max-file-size: 50MB      # 单个文件最大 50MB
-      max-request-size: 100MB  # 整个请求最大 100MB
+      max-file-size: 10MB      # 单个文件最大 10MB
+      max-request-size: 1024MB  # 整个请求最大 1024MB
 polo:
   web:
     enabled: true
@@ -122,16 +122,16 @@ polo:
       endpoint: http://127.0.0.1:9000
       access-key: minioadmin
       secret-key: minioadmin
-      bucket: demo
+      bucket: travel
       public-url: http://127.0.0.1:9000
     upload:
       path-prefix: uploads
-      max-size: 10485760
-      allowed-extensions:
-        - jpg
-        - jpeg
-        - png
-        - pdf
+      max-size: 1024MB
+#      allowed-extensions:
+#        - jpg
+#        - jpeg
+#        - png
+#        - pdf
       filename-strategy: UUID
       private-access: false
       generate-thumbnail: true

@@ -151,8 +151,8 @@ polo:
     upload:
       # 默认存储路径前缀。@UploadFile 未指定 pathPrefix 时会回退到这里
       path-prefix: uploads
-      # 默认单文件最大大小，单位字节
-      max-size: 10485760
+      # 默认单文件最大大小，支持 10MB / 512KB / 1GB 这类写法
+      max-size: 10MB
       # 默认 MIME 类型白名单。为空表示不限制
       allowed-types:
         - image/jpeg

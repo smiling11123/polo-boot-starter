@@ -7,12 +7,18 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class JsonMaskUtil {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String MASK = "****";
+    private static final ConcurrentMap<String, List<MaskRule>> MASK_RULE_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 对象转 JSON 并脱敏
@@ -64,10 +70,32 @@ public class JsonMaskUtil {
     }
 
     private static boolean shouldMask(String key, String[] patterns) {
+        if (patterns == null || patterns.length == 0) {
+            return false;
+        }
         String lowerKey = key.toLowerCase();
-        return Arrays.stream(patterns).anyMatch(pattern ->
-                lowerKey.contains(pattern.toLowerCase()) ||
-                        Pattern.matches(pattern, key)
-        );
+        return resolveRules(patterns).stream().anyMatch(rule -> rule.matches(key, lowerKey));
+    }
+
+    private static List<MaskRule> resolveRules(String[] patterns) {
+        String cacheKey = Arrays.stream(patterns)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining("\u0001"));
+        return MASK_RULE_CACHE.computeIfAbsent(cacheKey, ignored -> Arrays.stream(patterns)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(pattern -> !pattern.isEmpty())
+                .map(MaskRule::new)
+                .toList());
+    }
+
+    private record MaskRule(String rawPattern, String lowerPattern, Pattern regexPattern) {
+        private MaskRule(String rawPattern) {
+            this(rawPattern, rawPattern.toLowerCase(), Pattern.compile(rawPattern));
+        }
+
+        private boolean matches(String key, String lowerKey) {
+            return lowerKey.contains(lowerPattern) || regexPattern.matcher(key).matches();
+        }
     }
 }
