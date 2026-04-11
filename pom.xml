@@ -3,13 +3,38 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.polo</groupId>
+    <groupId>io.github.smiling11123</groupId>
     <artifactId>polo-boot-starter</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
 
     <name>polo-boot-starter</name>
-    <description>A reusable Spring Boot starter scaffold for backend projects.</description>
+    <description>A modular Spring Boot starter suite for backend infrastructure capabilities.</description>
+    <url>https://github.com/smiling11123/polo-boot-starter</url>
+
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>smiling11123</id>
+            <name>Yang Bin</name>
+            <email>m15179028795_1@163.com</email>
+            <url>https://github.com/smiling11123</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/smiling11123/polo-boot-starter</url>
+        <connection>scm:git:https://github.com/smiling11123/polo-boot-starter.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/smiling11123/polo-boot-starter.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>polo-boot-core</module>
@@ -34,6 +59,10 @@
         <cos.version>5.6.89</cos.version>
         <lombok.version>1.18.34</lombok.version>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+        <maven.javadoc.plugin.version>3.8.0</maven.javadoc.plugin.version>
+        <maven.gpg.plugin.version>3.2.7</maven.gpg.plugin.version>
+        <central.publishing.plugin.version>0.10.0</central.publishing.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -93,7 +122,91 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring.boot.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven.source.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven.javadoc.plugin.version}</version>
+                    <configuration>
+                        <source>${maven.compiler.release}</source>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <doclint>none</doclint>
+                        <failOnError>false</failOnError>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven.gpg.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>${central.publishing.plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <excludeArtifacts>polo-boot-demo</excludeArtifacts>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

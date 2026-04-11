@@ -4,12 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.polo</groupId>
+        <groupId>io.github.smiling11123</groupId>
         <artifactId>polo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>polo-boot-validation</artifactId>
+    <name>polo-boot-validation</name>
+    <description>Validation and content moderation starter for polo-boot.</description>
     <dependencies>
         <dependency>
             <groupId>jakarta.validation</groupId>

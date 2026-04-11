@@ -4,12 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.polo</groupId>
+        <groupId>io.github.smiling11123</groupId>
         <artifactId>polo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>polo-boot-context-trans</artifactId>
+    <name>polo-boot-context-trans</name>
+    <description>Async context propagation starter for security, data scope and upload context.</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -19,17 +21,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-security</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-mybatis-plus</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-storage</artifactId>
             <version>${project.version}</version>
         </dependency>

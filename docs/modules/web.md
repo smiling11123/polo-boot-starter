@@ -21,9 +21,9 @@
 
 ```xml
 <dependency>
-    <groupId>com.polo</groupId>
+    <groupId>io.github.smiling11123</groupId>
     <artifactId>polo-boot-web</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -93,4 +93,3 @@ public Result<?> create(@RequestBody OrderCreateRequest request) {
 
 `polo-boot-web` 本身不强制把日志落库。  
 如果你需要操作日志持久化，建议实现LogRecorder重写record方法完成日志存储实现。
-

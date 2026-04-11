@@ -4,12 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.polo</groupId>
+        <groupId>io.github.smiling11123</groupId>
         <artifactId>polo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>polo-boot-core</artifactId>
+    <name>polo-boot-core</name>
+    <description>Core result, exception and shared context contracts for polo-boot.</description>
 
     <dependencies>
         <dependency>

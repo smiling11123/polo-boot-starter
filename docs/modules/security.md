@@ -29,9 +29,9 @@
 
 ```xml
 <dependency>
-    <groupId>com.polo</groupId>
+    <groupId>io.github.smiling11123</groupId>
     <artifactId>polo-boot-security</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 

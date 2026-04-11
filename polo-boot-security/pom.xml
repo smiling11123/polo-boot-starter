@@ -4,21 +4,23 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.polo</groupId>
+        <groupId>io.github.smiling11123</groupId>
         <artifactId>polo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>polo-boot-security</artifactId>
+    <name>polo-boot-security</name>
+    <description>Authentication, authorization, session and request protection starter for polo-boot.</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-web</artifactId>
             <version>${project.version}</version>
         </dependency>

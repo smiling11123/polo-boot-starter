@@ -143,9 +143,9 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (tokenService != null) {
             return tokenService.authenticate(token);
         }
-        if (jwtService != null) {
-            return jwtService.parse(token);
-        }
+//        if (jwtService != null) {
+//            return jwtService.parse(token);
+//        }
         throw new IllegalStateException("认证拦截器未配置可用的认证服务");
     }
 }

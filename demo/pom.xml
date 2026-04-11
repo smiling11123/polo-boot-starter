@@ -4,42 +4,47 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.polo</groupId>
+        <groupId>io.github.smiling11123</groupId>
         <artifactId>polo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>polo-boot-demo</artifactId>
     <name>polo-boot-demo</name>
+    <description>Demo application for validating the published starter modules.</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-web</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-security</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-cache</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-storage</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-api-doc</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -58,9 +63,9 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-mybatis-plus</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -69,12 +74,12 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-validation</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-context-trans</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -4,15 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.polo</groupId>
+        <groupId>io.github.smiling11123</groupId>
         <artifactId>polo-boot-starter</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>polo-boot-api-doc</artifactId>
+    <name>polo-boot-api-doc</name>
+    <description>OpenAPI and Swagger auto-configuration starter for polo-boot.</description>
     <dependencies>
         <dependency>
-            <groupId>com.polo</groupId>
+            <groupId>io.github.smiling11123</groupId>
             <artifactId>polo-boot-core</artifactId>
             <version>${project.version}</version>
         </dependency>
