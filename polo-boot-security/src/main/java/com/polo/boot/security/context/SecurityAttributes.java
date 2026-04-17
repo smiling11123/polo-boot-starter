@@ -2,8 +2,12 @@ package com.polo.boot.security.context;
 
 import com.polo.boot.security.model.LoginUser;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 @SuppressWarnings("unchecked")
 public final class SecurityAttributes {
@@ -55,6 +59,29 @@ public final class SecurityAttributes {
         }
         if (actualTargetType == String.class) {
             return (T) String.valueOf(value);
+        }
+        if (Collection.class.isAssignableFrom(actualTargetType)) {
+            if (value instanceof Collection<?> collection) {
+                if (actualTargetType == LinkedHashSet.class || actualTargetType == java.util.Set.class) {
+                    return (T) new LinkedHashSet<>(collection);
+                }
+                if (actualTargetType == ArrayList.class || actualTargetType == java.util.List.class || actualTargetType == Collection.class) {
+                    return (T) new ArrayList<>(collection);
+                }
+            }
+            if (value.getClass().isArray()) {
+                int length = Array.getLength(value);
+                ArrayList<Object> list = new ArrayList<>(length);
+                for (int i = 0; i < length; i++) {
+                    list.add(Array.get(value, i));
+                }
+                if (actualTargetType == LinkedHashSet.class || actualTargetType == java.util.Set.class) {
+                    return (T) new LinkedHashSet<>(list);
+                }
+                if (actualTargetType == ArrayList.class || actualTargetType == java.util.List.class || actualTargetType == Collection.class) {
+                    return (T) list;
+                }
+            }
         }
         if (value instanceof Number number) {
             if (actualTargetType == Long.class) {

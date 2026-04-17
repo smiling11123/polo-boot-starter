@@ -2,8 +2,6 @@ package com.polo.boot.security.context;
 
 import com.polo.boot.security.annotation.SecurityAttributeField;
 import com.polo.boot.security.annotation.SecurityAttributeType;
-import com.polo.boot.security.model.UserPrincipal;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -19,15 +17,12 @@ final class SecurityAnnotatedAttributeResolver {
     private SecurityAnnotatedAttributeResolver() {
     }
 
-    static Map<String, Object> resolve(UserPrincipal userPrincipal) {
-        if (userPrincipal == null) {
+    static Map<String, Object> resolve(Object source) {
+        if (source == null) {
             return Map.of();
         }
 
-        List<AnnotatedField> annotatedFields = CACHE.computeIfAbsent(
-                userPrincipal.getClass(),
-                SecurityAnnotatedAttributeResolver::scanAnnotatedFields
-        );
+        List<AnnotatedField> annotatedFields = getAnnotatedFields(source.getClass());
         if (annotatedFields.isEmpty()) {
             return Map.of();
         }
@@ -35,7 +30,7 @@ final class SecurityAnnotatedAttributeResolver {
         Map<String, Object> attributes = new LinkedHashMap<>();
         for (AnnotatedField annotatedField : annotatedFields) {
             try {
-                Object value = annotatedField.field().get(userPrincipal);
+                Object value = annotatedField.field().get(source);
                 if (value != null) {
                     attributes.put(annotatedField.attributeKey(), value);
                 }
@@ -44,6 +39,10 @@ final class SecurityAnnotatedAttributeResolver {
             }
         }
         return attributes;
+    }
+
+    static List<AnnotatedField> getAnnotatedFields(Class<?> sourceType) {
+        return CACHE.computeIfAbsent(sourceType, SecurityAnnotatedAttributeResolver::scanAnnotatedFields);
     }
 
     private static List<AnnotatedField> scanAnnotatedFields(Class<?> sourceType) {
@@ -64,6 +63,6 @@ final class SecurityAnnotatedAttributeResolver {
         return List.copyOf(annotatedFields);
     }
 
-    private record AnnotatedField(Field field, String attributeKey) {
+    record AnnotatedField(Field field, String attributeKey) {
     }
 }

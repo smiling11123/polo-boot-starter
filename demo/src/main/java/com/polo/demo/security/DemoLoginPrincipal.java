@@ -1,16 +1,30 @@
 package com.polo.demo.security;
 
+import com.polo.boot.security.annotation.SecurityAttributesField;
 import com.polo.boot.security.annotation.SecurityAttributeField;
 import com.polo.boot.security.annotation.SecurityAttributeType;
-import com.polo.boot.security.model.LoginUser;
+import com.polo.boot.security.annotation.SecurityPrincipalField;
+import com.polo.boot.security.annotation.SecurityPrincipalType;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class DemoLoginPrincipal extends LoginUser {
+public class DemoLoginPrincipal {
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ID)
+
+    private Long userId;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_NAME)
+    private String username;
+
+    private String password;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ROLE)
+    private String role;
+
     @SecurityAttributeField(type = SecurityAttributeType.TENANT_ID)
     private Long tenantId;
 
@@ -28,4 +42,7 @@ public class DemoLoginPrincipal extends LoginUser {
 
     @SecurityAttributeField(type = SecurityAttributeType.PERMISSIONS)
     private List<String> permissions;
+
+    @SecurityAttributesField
+    private Map<String, Object> attributes = new LinkedHashMap<>();
 }

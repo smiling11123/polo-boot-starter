@@ -31,7 +31,7 @@
 <dependency>
     <groupId>io.github.smiling11123</groupId>
     <artifactId>polo-boot-security</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 </dependency>
 ```
 
@@ -134,10 +134,12 @@ polo:
 
 ```java
 @GetMapping("/me")
-public Result<?> me(@CurrentUser LoginUser user) {
+public Result<?> me(@CurrentUser DemoLoginPrincipal user) {
     return Result.success(user);
 }
 ```
+
+只要 `DemoLoginPrincipal` 自己在字段上标了主身份注解，就不需要再实现 `UserPrincipal` 或继承 `LoginUser`。
 
 ### 2. 获取当前上下文属性
 
@@ -178,18 +180,31 @@ UserContext.getAttribute("tenantId", Long.class);
 
 ## 用户对象需要提供什么
 
-最少需要一个 `UserPrincipal`。  
-如果还要用这些能力：
+现在支持两种接入方式：
 
-- 租户
-- 部门
-- 审计
-- 权限点
-- 管理员标记
+- 兼容旧写法：实现 `UserPrincipal`
+- 更推荐：直接用业务自己的普通对象，在字段上标注：
+  - `@SecurityPrincipalField`
+  - `@SecurityAttributeField`
+  - `@SecurityAttributesField`（如果还想保留一份原始扩展属性 Map）
 
-推荐在用户对象字段上加：
+示例：
 
-- `@SecurityAttributeField`
+```java
+public class DemoLoginPrincipal {
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ID)
+    private Long userId;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_NAME)
+    private String username;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ROLE)
+    private String role;
+
+    @SecurityAttributeField(type = SecurityAttributeType.TENANT_ID)
+    private Long tenantId;
+}
+```
 
 demo 参考：
 

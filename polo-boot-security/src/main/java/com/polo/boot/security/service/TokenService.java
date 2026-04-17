@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polo.boot.core.constant.ErrorCode;
 import com.polo.boot.core.exception.BizException;
 import com.polo.boot.security.context.SecurityPrincipalAttributesResolver;
+import com.polo.boot.security.context.SecurityPrincipalSupport;
 import com.polo.boot.security.model.ClientDevice;
 import com.polo.boot.security.model.DeviceInfo;
 import com.polo.boot.security.model.LoginSession;
@@ -52,14 +53,27 @@ public class TokenService {
     }
 
     public TokenPair login(UserPrincipal userPrincipal, HttpServletRequest request) {
-        return login(userPrincipal, request, null);
+        return login((Object) userPrincipal, request, null);
     }
 
     public TokenPair login(UserPrincipal userPrincipal, ClientDevice clientDevice) {
-        return login(userPrincipal, null, clientDevice);
+        return login((Object) userPrincipal, null, clientDevice);
     }
 
     public TokenPair login(UserPrincipal userPrincipal, HttpServletRequest request, ClientDevice clientDevice) {
+        return login((Object) userPrincipal, request, clientDevice);
+    }
+
+    public TokenPair login(Object principalSource, HttpServletRequest request) {
+        return login(principalSource, request, null);
+    }
+
+    public TokenPair login(Object principalSource, ClientDevice clientDevice) {
+        return login(principalSource, null, clientDevice);
+    }
+
+    public TokenPair login(Object principalSource, HttpServletRequest request, ClientDevice clientDevice) {
+        UserPrincipal userPrincipal = SecurityPrincipalSupport.adapt(principalSource);
         Long userId = userPrincipal.getPrincipalId();
 
 

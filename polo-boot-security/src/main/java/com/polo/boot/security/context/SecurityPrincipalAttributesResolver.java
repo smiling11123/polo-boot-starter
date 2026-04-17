@@ -15,20 +15,26 @@ public final class SecurityPrincipalAttributesResolver {
     private SecurityPrincipalAttributesResolver() {
     }
 
-    public static Map<String, Object> resolve(UserPrincipal userPrincipal) {
-        if (userPrincipal == null) {
+    public static Map<String, Object> resolve(Object principalSource) {
+        if (principalSource == null) {
             return Map.of();
         }
 
         Map<String, Object> attributes = new LinkedHashMap<>();
 
-        mergeIfAbsent(attributes, resolveInterfaceAttributes(userPrincipal));
-        if (userPrincipal instanceof SecurityAttributeProvider securityAttributeProvider) {
+        mergeIfAbsent(attributes, resolveInterfaceAttributes(principalSource));
+        if (principalSource instanceof SecurityAttributeProvider securityAttributeProvider) {
             mergeIfAbsent(attributes, securityAttributeProvider.provideSecurityAttributes());
         }
-        merge(attributes, SecurityAnnotatedAttributeResolver.resolve(userPrincipal));
-        merge(attributes, userPrincipal.getAttributes());
+        merge(attributes, SecurityAnnotatedAttributeResolver.resolve(principalSource));
+        if (principalSource instanceof UserPrincipal userPrincipal) {
+            merge(attributes, userPrincipal.getAttributes());
+        }
         return attributes;
+    }
+
+    public static Map<String, Object> resolve(UserPrincipal userPrincipal) {
+        return resolve((Object) userPrincipal);
     }
 
     public static Object getAttribute(UserPrincipal userPrincipal, String key) {
@@ -60,21 +66,21 @@ public final class SecurityPrincipalAttributesResolver {
         });
     }
 
-    private static Map<String, Object> resolveInterfaceAttributes(UserPrincipal userPrincipal) {
+    private static Map<String, Object> resolveInterfaceAttributes(Object principalSource) {
         Map<String, Object> attributes = new LinkedHashMap<>();
-        if (userPrincipal instanceof TenantAwarePrincipal tenantAwarePrincipal && tenantAwarePrincipal.getTenantId() != null) {
+        if (principalSource instanceof TenantAwarePrincipal tenantAwarePrincipal && tenantAwarePrincipal.getTenantId() != null) {
             attributes.put(SecurityAttributeKeys.TENANT_ID, tenantAwarePrincipal.getTenantId());
         }
-        if (userPrincipal instanceof DeptAwarePrincipal deptAwarePrincipal && deptAwarePrincipal.getDeptId() != null) {
+        if (principalSource instanceof DeptAwarePrincipal deptAwarePrincipal && deptAwarePrincipal.getDeptId() != null) {
             attributes.put(SecurityAttributeKeys.DEPT_ID, deptAwarePrincipal.getDeptId());
         }
-        if (userPrincipal instanceof DataScopeAwarePrincipal dataScopeAwarePrincipal && dataScopeAwarePrincipal.getDataScope() != null) {
+        if (principalSource instanceof DataScopeAwarePrincipal dataScopeAwarePrincipal && dataScopeAwarePrincipal.getDataScope() != null) {
             attributes.put(SecurityAttributeKeys.DATA_SCOPE, dataScopeAwarePrincipal.getDataScope());
         }
-        if (userPrincipal instanceof AdminAwarePrincipal adminAwarePrincipal && adminAwarePrincipal.getAdminFlag() != null) {
+        if (principalSource instanceof AdminAwarePrincipal adminAwarePrincipal && adminAwarePrincipal.getAdminFlag() != null) {
             attributes.put(SecurityAttributeKeys.IS_ADMIN, adminAwarePrincipal.getAdminFlag());
         }
-        if (userPrincipal instanceof AuditAwarePrincipal auditAwarePrincipal && auditAwarePrincipal.getAuditUserId() != null) {
+        if (principalSource instanceof AuditAwarePrincipal auditAwarePrincipal && auditAwarePrincipal.getAuditUserId() != null) {
             attributes.put(SecurityAttributeKeys.AUDIT_USER_ID, auditAwarePrincipal.getAuditUserId());
         }
         return attributes;

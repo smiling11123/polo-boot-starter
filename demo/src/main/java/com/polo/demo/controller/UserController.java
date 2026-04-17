@@ -5,12 +5,10 @@ import com.polo.boot.core.model.Result;
 import com.polo.boot.mybatis.plus.annotation.DataScope;
 import com.polo.boot.mybatis.plus.annotation.DataScopeType;
 import com.polo.boot.security.annotation.CurrentUser;
-import com.polo.boot.security.annotation.CurrentUserAttribute;
 import com.polo.boot.security.annotation.RequirePermission;
-import com.polo.boot.security.context.SecurityAttributeKeys;
-import com.polo.boot.security.model.LoginUser;
 import com.polo.boot.web.annotation.OperationLog;
 import com.polo.boot.web.annotation.OperationType;
+import com.polo.demo.security.DemoLoginPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,21 +24,24 @@ public class UserController {
     @DataScope(type = DataScopeType.SELF_ONLY, userColumn = "user_id")
     @ApiOperation(value = "获取当前用户", description = "返回当前登录用户信息")
     @OperationLog(module = "用户中心", type = OperationType.QUERY, desc = "获取当前用户")
-    public Result<LoginUser> me(@CurrentUser LoginUser loginUser) {
+    public Result<DemoLoginPrincipal> me(@CurrentUser DemoLoginPrincipal loginUser) {
         return Result.success(loginUser);
     }
 
     @GetMapping("/context")
     @ApiOperation(value = "获取用户上下文", description = "查看当前登录上下文和扩展属性")
     @OperationLog(module = "用户中心", type = OperationType.QUERY, desc = "获取用户上下文")
-    public Result<Map<String, Object>> context(@CurrentUser LoginUser loginUser) {
+    public Result<Map<String, Object>> context(@CurrentUser DemoLoginPrincipal loginUser) {
         return Result.success(Map.of(
                 "userId", loginUser.getUserId(),
-                "tenantId", 1,
-                "deptId", 1,
-                "dataScope", 1,
-                "isAdmin", Boolean.TRUE.equals(true),
-                "permissions", 1,
+                "username", loginUser.getUsername(),
+                "role", loginUser.getRole(),
+                "tenantId", loginUser.getTenantId(),
+                "deptId", loginUser.getDeptId(),
+                "dataScope", loginUser.getDataScope(),
+                "isAdmin", loginUser.getAdminFlag(),
+                "permissions", loginUser.getPermissions(),
+                "auditUserId", loginUser.getAuditUserId(),
                 "attributes", loginUser.getAttributes()
         ));
     }
@@ -61,10 +62,10 @@ public class UserController {
     @GetMapping("/permission-demo")
     @ApiOperation(value = "权限校验示例", description = "演示按权限访问接口")
     @OperationLog(module = "用户中心", type = OperationType.QUERY, desc = "权限校验示例")
-    public Result<Map<String, Object>> permissionDemo(@CurrentUser LoginUser loginUser) {
+    public Result<Map<String, Object>> permissionDemo(@CurrentUser DemoLoginPrincipal loginUser) {
         return Result.success(Map.of(
                 "username", loginUser.getUsername(),
-                "permissions", loginUser.getPrincipalPermissions()
+                "permissions", loginUser.getPermissions()
         ));
     }
 

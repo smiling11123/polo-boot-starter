@@ -2,7 +2,6 @@ package com.polo.demo.service;
 
 import com.polo.boot.core.constant.ErrorCode;
 import com.polo.boot.core.exception.BizException;
-import com.polo.boot.security.model.LoginUser;
 import com.polo.demo.security.DemoLoginPrincipal;
 import org.springframework.stereotype.Service;
 
@@ -98,26 +97,6 @@ public class DemoUserProfileService {
         return profile.toPrincipal();
     }
 
-    public DemoLoginPrincipal rebuildPrincipal(LoginUser loginUser) {
-        if (loginUser instanceof DemoLoginPrincipal demoLoginPrincipal) {
-            return copyPrincipal(demoLoginPrincipal);
-        }
-
-        DemoAccountProfile profile = profiles.get(loginUser.getUsername());
-        if (profile != null) {
-            return profile.toPrincipal();
-        }
-
-        DemoLoginPrincipal principal = new DemoLoginPrincipal();
-        principal.setUserId(loginUser.getUserId());
-        principal.setUsername(loginUser.getUsername());
-        principal.setRole(loginUser.getRole());
-        principal.setAuditUserId(loginUser.getUserId());
-        principal.setAdminFlag(loginUser.isAdmin());
-        principal.getAttributes().putAll(loginUser.getAttributes());
-        return principal;
-    }
-
     public List<Map<String, Object>> listAccounts() {
         return profiles.values().stream()
                 .map(profile -> Map.<String, Object>of(
@@ -148,7 +127,7 @@ public class DemoUserProfileService {
         target.setAuditUserId(source.getAuditUserId());
         target.setAdminFlag(source.getAdminFlag());
         target.setPermissions(source.getPermissions());
-        target.getAttributes().putAll(source.getAttributes());
+        target.setAttributes(source.getAttributes() == null ? new LinkedHashMap<>() : new LinkedHashMap<>(source.getAttributes()));
         return target;
     }
 

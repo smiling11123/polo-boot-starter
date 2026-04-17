@@ -6,11 +6,9 @@ import com.polo.boot.core.exception.BizException;
 import com.polo.boot.core.model.Result;
 import com.polo.boot.security.annotation.CurrentUser;
 import com.polo.boot.security.annotation.RequireRole;
-import com.polo.boot.security.model.LoginUser;
 import com.polo.boot.security.model.TokenPair;
 import com.polo.boot.security.service.QrCodeService;
 import com.polo.demo.security.DemoLoginPrincipal;
-import com.polo.demo.service.DemoUserProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,9 +23,6 @@ import java.util.Map;
 public class QrCodeLoginController {
     @Autowired
     private QrCodeService qrCodeService;
-
-    @Autowired
-    private DemoUserProfileService demoUserProfileService;
 
     // ==========================================
     // ==== PC端接口：获取验证码和长轮询状态 ====
@@ -50,21 +45,19 @@ public class QrCodeLoginController {
     @RequireRole("admin")
     @PostMapping("/scan")
     @ApiOperation(value = "App扫描二维码", description = "App调起摄像头扫描并告知服务端已扫描")
-    public Result<Void> scan(@RequestParam String uuid, @CurrentUser LoginUser user) {
+    public Result<Void> scan(@RequestParam String uuid, @CurrentUser DemoLoginPrincipal user) {
         qrCodeService.scan(uuid, user);
         return Result.success(null);
     }
     @RequireRole("admin")
     @PostMapping("/confirm")
     @ApiOperation(value = "App确认登录授权", description = "App端用户点击确认授权登录按钮")
-    public Result<AuthController.LoginResponse> confirm(@RequestParam String uuid, @CurrentUser LoginUser user) {
-        DemoLoginPrincipal loginUser = demoUserProfileService.rebuildPrincipal(user);
-
-        TokenPair tokenPair = qrCodeService.confirm(uuid, loginUser);
+    public Result<AuthController.LoginResponse> confirm(@RequestParam String uuid, @CurrentUser DemoLoginPrincipal user) {
+        TokenPair tokenPair = qrCodeService.confirm(uuid, user);
 
         AuthController.LoginResponse response = new AuthController.LoginResponse();
-        response.setUserId(loginUser.getUserId());
-        response.setUsername(loginUser.getUsername());
+        response.setUserId(user.getUserId());
+        response.setUsername(user.getUsername());
         response.setRole(user.getRole());
         response.setTokenPair(tokenPair);
         return Result.success(response);

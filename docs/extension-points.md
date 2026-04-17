@@ -389,8 +389,28 @@ public class DbDeptHierarchyProvider implements DeptHierarchyProvider {
 
 补充说明：
 
-- 如果你已经有自己的登录用户对象，最推荐直接实现这个接口
-- 其他租户、部门、权限等扩展信息，可以继续通过字段注解或 `getAttributes()` 提供
+- 这是兼容旧写法的最小契约，继续可用
+- 如果你已经有自己的登录用户对象，现在也可以完全不实现这个接口
+- 更推荐直接在业务对象字段上加 `@SecurityPrincipalField` / `@SecurityAttributeField`
+- 如果你还想保留一份原始扩展属性 Map，可以额外标 `@SecurityAttributesField`
+
+注解式示例：
+
+```java
+public class DemoPrincipal {
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ID)
+    private Long userId;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_NAME)
+    private String username;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ROLE)
+    private String role;
+
+    @SecurityAttributeField(type = SecurityAttributeType.TENANT_ID)
+    private Long tenantId;
+}
+```
 
 #### `SecurityAttributeProvider`
 

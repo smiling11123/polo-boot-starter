@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polo.boot.core.constant.ErrorCode;
 import com.polo.boot.core.exception.BizException;
+import com.polo.boot.security.context.SecurityPrincipalSupport;
 import com.polo.boot.security.model.ClientDevice;
 import com.polo.boot.security.model.LoginUser;
 import com.polo.boot.security.model.QrCodeStatus;
 import com.polo.boot.security.model.TokenPair;
+import com.polo.boot.security.model.UserPrincipal;
 import com.polo.boot.security.properties.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,23 +73,33 @@ public class QrCodeService {
     }
 
     public void scan(String uuid, LoginUser currentUser) {
+        scan(uuid, (Object) currentUser);
+    }
+
+    public void scan(String uuid, Object currentUser) {
+        UserPrincipal userPrincipal = SecurityPrincipalSupport.adapt(currentUser);
         String status = (String) redisTemplate.opsForHash().get(QR_PREFIX + uuid, "status");
         if (!QrCodeStatus.WAITING_SCAN.name().equals(status)) {
             throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "二维码已失效或已被扫描");
         }
         redisTemplate.opsForHash().put(QR_PREFIX + uuid, "status", QrCodeStatus.SCANNED.name());
-        redisTemplate.opsForHash().put(QR_PREFIX + uuid, "userId", currentUser.getUserId().toString());
-        redisTemplate.opsForHash().put(QR_PREFIX + uuid, "nickname", currentUser.getUsername());
-        
-        Object avatar = currentUser.getAttributes().get("avatar");
+        redisTemplate.opsForHash().put(QR_PREFIX + uuid, "userId", userPrincipal.getPrincipalId().toString());
+        redisTemplate.opsForHash().put(QR_PREFIX + uuid, "nickname", userPrincipal.getPrincipalName());
+
+        Object avatar = userPrincipal.getAttributes().get("avatar");
         if (avatar != null) {
             redisTemplate.opsForHash().put(QR_PREFIX + uuid, "avatar", avatar.toString());
         }
     }
 
     public TokenPair confirm(String uuid, LoginUser currentUser) {
+        return confirm(uuid, (Object) currentUser);
+    }
+
+    public TokenPair confirm(String uuid, Object currentUser) {
+        UserPrincipal userPrincipal = SecurityPrincipalSupport.adapt(currentUser);
         String userIdStr = (String) redisTemplate.opsForHash().get(QR_PREFIX + uuid, "userId");
-        if (userIdStr == null || !userIdStr.equals(currentUser.getUserId().toString())) {
+        if (userIdStr == null || !userIdStr.equals(userPrincipal.getPrincipalId().toString())) {
             throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "二维码状态异动或您不是扫码本人");
         }
 
@@ -101,10 +113,10 @@ public class QrCodeService {
             webDevice.setDeviceType("PC");
             webDevice.setDeviceName("Web QrCode Login");
 
-            tokenPair = tokenService.login(currentUser, webDevice);
+            tokenPair = tokenService.login(userPrincipal, webDevice);
         } else {
             String deviceId = "WEB-" + UUID.randomUUID().toString().substring(0, 8);
-            tokenPair = jwtService.createTokenPair(currentUser, null, deviceId);
+            tokenPair = jwtService.createTokenPair(userPrincipal, null, deviceId);
         }
         
         redisTemplate.opsForHash().put(QR_PREFIX + uuid, "status", QrCodeStatus.CONFIRMED.name());

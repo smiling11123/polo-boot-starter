@@ -3,8 +3,8 @@ package com.polo.boot.security.resolver;
 import com.polo.boot.core.constant.ErrorCode;
 import com.polo.boot.core.exception.BizException;
 import com.polo.boot.security.annotation.CurrentUser;
+import com.polo.boot.security.context.SecurityPrincipalSupport;
 import com.polo.boot.security.context.UserContext;
-import com.polo.boot.security.model.UserPrincipal;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -15,7 +15,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(CurrentUser.class)
-                && UserPrincipal.class.isAssignableFrom(parameter.getParameterType());
+                && SecurityPrincipalSupport.supportsType(parameter.getParameterType());
     }
 
     @Override
@@ -23,10 +23,10 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                                   ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest,
                                   WebDataBinderFactory binderFactory) {
-        UserPrincipal userPrincipal = UserContext.get();
+        var userPrincipal = UserContext.get();
         if (userPrincipal == null) {
             throw new BizException(ErrorCode.UNAUTHORIZED);
         }
-        return userPrincipal;
+        return SecurityPrincipalSupport.convert(userPrincipal, parameter.getParameterType());
     }
 }

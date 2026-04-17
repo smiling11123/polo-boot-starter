@@ -39,10 +39,12 @@
 
 ```java
 @GetMapping("/me")
-public Result<?> me(@CurrentUser LoginUser user) {
+public Result<?> me(@CurrentUser DemoLoginPrincipal user) {
     return Result.success(user);
 }
 ```
+
+这里的 `DemoLoginPrincipal` 不必实现 `UserPrincipal`，只要它自己的字段上标了主身份注解即可。
 
 **字段说明**
 
@@ -281,7 +283,89 @@ public Result<?> sendCode() {
 
 ---
 
-### 2.7 `@SecurityAttributeField`
+### 2.7 `@SecurityPrincipalField`
+
+**作用**
+
+标记业务登录对象里的“主身份字段”，让框架知道哪个字段是登录 ID、用户名、角色。
+
+**使用位置**
+
+- 字段
+
+**示例**
+
+```java
+public class DemoLoginPrincipal {
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ID)
+    private Long userId;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_NAME)
+    private String username;
+
+    @SecurityPrincipalField(type = SecurityPrincipalType.PRINCIPAL_ROLE)
+    private String role;
+}
+```
+
+**字段说明**
+
+| 字段 | 类型 | 默认值 | 含义 |
+| --- | --- | --- | --- |
+| `type` | `SecurityPrincipalType` | 无 | 当前字段对应哪一个主身份语义 |
+
+**`SecurityPrincipalType` 取值**
+
+| 取值 | 含义 |
+| --- | --- |
+| `PRINCIPAL_ID` | 当前登录主体 ID，登录时必填 |
+| `PRINCIPAL_NAME` | 当前登录主体名称，例如用户名、昵称 |
+| `PRINCIPAL_ROLE` | 当前登录主体角色 |
+
+**适用场景**
+
+- 不想实现 `UserPrincipal`
+- 不想继承 `LoginUser`
+- 直接把业务自己的用户对象传给 `tokenService.login(...)`
+- 直接在 controller 里用 `@CurrentUser YourPrincipal`
+
+---
+
+### 2.8 `@SecurityAttributesField`
+
+**作用**
+
+标记一个 `Map<String, Object>` 字段，用来保留当前登录用户的原始扩展属性集合。
+
+**使用位置**
+
+- 字段
+
+**示例**
+
+```java
+public class DemoLoginPrincipal {
+
+    @SecurityAttributesField
+    private Map<String, Object> attributes = new LinkedHashMap<>();
+}
+```
+
+**字段说明**
+
+这个注解没有额外字段，它只是告诉框架：
+
+- 登录时把这份 Map 一并写入上下文
+- `@CurrentUser` 回填自定义对象时，也把属性 Map 一并恢复回来
+
+**适用场景**
+
+- 除了租户、部门、权限这些标准字段外，还想保留头像、昵称、渠道等扩展属性
+
+---
+
+### 2.9 `@SecurityAttributeField`
 
 **作用**
 
@@ -294,7 +378,7 @@ public Result<?> sendCode() {
 **示例**
 
 ```java
-public class DemoLoginPrincipal extends LoginUser {
+public class DemoLoginPrincipal {
 
     @SecurityAttributeField(type = SecurityAttributeType.TENANT_ID)
     private Long tenantId;

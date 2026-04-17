@@ -6,7 +6,10 @@ import com.polo.boot.core.exception.BizException;
 import com.polo.boot.core.model.Result;
 import com.polo.boot.security.annotation.CurrentUser;
 import com.polo.boot.security.interceptor.TokenResolver;
-import com.polo.boot.security.model.*;
+import com.polo.boot.security.model.ClientDevice;
+import com.polo.boot.security.model.DeviceInfo;
+import com.polo.boot.security.model.LoginUser;
+import com.polo.boot.security.model.TokenPair;
 import com.polo.boot.security.service.TokenService;
 import com.polo.boot.web.annotation.OperationLog;
 import com.polo.boot.web.annotation.OperationType;
@@ -40,18 +43,25 @@ public class AuthController {
     @Autowired
     private DemoUserProfileService demoUserProfileService;
 
+    @PostMapping("/logintest")
+    public Result<TokenPair> loginTest(@RequestBody DemoLoginPrincipal user, HttpServletRequest request){
+        TokenPair tokenPair = tokenService.login(user, request);
+        return Result.success(tokenPair);
+    }
+
+
     @PostMapping("/login")
     @ApiOperation(value = "用户登录",
             description = "用户名密码登录并返回 token")
     @OperationLog(module = "认证中心", type = OperationType.LOGIN, desc = "'用户登录[' + #p0.username + ']'")
-    public Result<LoginResponse> login(@RequestBody LoginRequest request, HttpServletRequest httpServletRequest) {
+    public Result<LoginResponse> login(@RequestBody DemoLoginPrincipal request, HttpServletRequest httpServletRequest) {
         if (request == null || !StringUtils.hasText(request.getUsername()) || !StringUtils.hasText(request.getPassword())) {
             throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "用户名或密码不能为空");
         }
 
         DemoLoginPrincipal loginUser = demoUserProfileService.authenticate(request.getUsername(), request.getPassword());
 
-        TokenPair tokenPair = tokenService.login(loginUser, httpServletRequest, request.getDevice());
+        TokenPair tokenPair = tokenService.login(loginUser, httpServletRequest);
 
         LoginResponse response = new LoginResponse();
         response.setUserId(loginUser.getUserId());
@@ -74,7 +84,7 @@ public class AuthController {
     @GetMapping("/devices")
     @ApiOperation(value = "查看在线设备", description = "获取当前账号在线设备列表")
     @OperationLog(module = "认证中心", type = OperationType.QUERY, desc = "查看在线设备")
-    public Result<List<DeviceInfo>> devices(@CurrentUser LoginUser loginUser,
+    public Result<List<DeviceInfo>> devices(@CurrentUser DemoLoginPrincipal loginUser,
                                             HttpServletRequest httpServletRequest) {
         String currentSessionId = tokenService.resolveCurrentSessionId(requireAccessToken(httpServletRequest));
         return Result.success(tokenService.listDevices(loginUser.getUserId(), currentSessionId));
@@ -91,7 +101,7 @@ public class AuthController {
     @DeleteMapping("/devices/{sessionId}")
     @ApiOperation(value = "下线指定设备", description = "按 sessionId 下线某个设备")
     @OperationLog(module = "认证中心", type = OperationType.LOGOUT, desc = "'下线设备[' + #sessionId + ']'")
-    public Result<Map<String, String>> logoutDevice(@CurrentUser LoginUser loginUser, @PathVariable String sessionId) {
+    public Result<Map<String, String>> logoutDevice(@CurrentUser DemoLoginPrincipal loginUser, @PathVariable String sessionId) {
         if (!StringUtils.hasText(sessionId)) {
             throw new BizException(ErrorCode.PARAM_ERROR.getCode(), "sessionId 不能为空");
         }
@@ -102,7 +112,7 @@ public class AuthController {
     @PostMapping("/logout-all")
     @ApiOperation(value = "退出全部设备", description = "退出当前账号的全部设备")
     @OperationLog(module = "认证中心", type = OperationType.LOGOUT, desc = "退出全部设备")
-    public Result<Map<String, String>> logoutAll(@CurrentUser LoginUser loginUser,
+    public Result<Map<String, String>> logoutAll(@CurrentUser DemoLoginPrincipal loginUser,
                                                  HttpServletRequest httpServletRequest,
                                                  @RequestParam(defaultValue = "false") boolean keepCurrent) {
         String keepSessionId = keepCurrent ? tokenService.resolveCurrentSessionId(requireAccessToken(httpServletRequest)) : null;
